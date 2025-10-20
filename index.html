@@ -131,24 +131,47 @@
 
         // --- FUNCTIONS ---
         
-        function startScanner() {
+        async function startScanner() {
+            // Check for camera support and secure context
             if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
-                showStatus('Camera not supported on this device.', 'error');
+                showStatus('Camera not supported. (Requires secure context/HTTPS)', 'error');
                 return;
             }
+
             scannerContainer.classList.remove('hidden');
-            navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } })
-                .then(function(s) {
-                    stream = s;
-                    video.srcObject = stream;
-                    video.play();
-                    animationFrameId = requestAnimationFrame(tick);
-                })
-                .catch(function(err) {
-                    console.error("Camera Error:", err);
-                    showStatus('Could not access the camera.', 'error');
-                    stopScanner();
-                });
+
+            try {
+                // Request the camera stream
+                const s = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } });
+                stream = s;
+                video.srcObject = stream;
+
+                // The 'loadeddata' event ensures the video is ready to play.
+                video.onloadeddata = async () => {
+                    try {
+                        await video.play();
+                        // Start scanning frames only after the video is playing
+                        animationFrameId = requestAnimationFrame(tick);
+                    } catch (playErr) {
+                        console.error("Video Play Error:", playErr);
+                        showStatus('Failed to play the camera stream.', 'error');
+                        stopScanner();
+                    }
+                };
+
+            } catch (err) {
+                console.error("Camera Access Error:", err);
+                let message = 'Could not access the camera.';
+                if (err.name === 'NotAllowedError') {
+                    message = 'Permission to use camera was denied. Please allow it in your browser settings.';
+                } else if (err.name === 'NotFoundError') {
+                    message = 'No rear-facing camera found on your device.';
+                } else if (err.name === 'NotReadableError') {
+                    message = 'The camera is currently in use by another application.';
+                }
+                showStatus(message, 'error');
+                stopScanner();
+            }
         }
 
         function stopScanner() {
@@ -257,10 +280,12 @@
         }
 
         // --- EVENT LISTENERS ---
-        scanButton.addEventListener('click', startScanner);
-        cancelScanButton.addEventListener('click', stopScanner);
-        checkOutButton.addEventListener('click', () => handleSubmit('Checked out'));
-        checkInButton.addEventListener('click', () => handleSubmit('Checked in'));
+        window.onload = () => {
+            scanButton.addEventListener('click', startScanner);
+            cancelScanButton.addEventListener('click', stopScanner);
+            checkOutButton.addEventListener('click', () => handleSubmit('Checked out'));
+            checkInButton.addEventListener('click', () => handleSubmit('Checked in'));
+        };
 
     </script>
 </body>
