@@ -1,0 +1,200 @@
+========================================
+INSTRUMENT BARCODE LIST
+========================================
+
+Copy and paste these codes into a barcode generator
+(recommended: https://barcode.tec-it.com/en)
+Use Code 128 format
+
+========================================
+BRASS - TRUMPETS (20)
+========================================
+TRUMPET-001
+TRUMPET-002
+TRUMPET-003
+TRUMPET-004
+TRUMPET-005
+TRUMPET-006
+TRUMPET-007
+TRUMPET-008
+TRUMPET-009
+TRUMPET-010
+TRUMPET-011
+TRUMPET-012
+TRUMPET-013
+TRUMPET-014
+TRUMPET-015
+TRUMPET-016
+TRUMPET-017
+TRUMPET-018
+TRUMPET-019
+TRUMPET-020
+
+========================================
+BRASS - TROMBONES (15)
+========================================
+TROMBONE-001
+TROMBONE-002
+TROMBONE-003
+TROMBONE-004
+TROMBONE-005
+TROMBONE-006
+TROMBONE-007
+TROMBONE-008
+TROMBONE-009
+TROMBONE-010
+TROMBONE-011
+TROMBONE-012
+TROMBONE-013
+TROMBONE-014
+TROMBONE-015
+
+========================================
+BRASS - FRENCH HORNS (8)
+========================================
+HORN-001
+HORN-002
+HORN-003
+HORN-004
+HORN-005
+HORN-006
+HORN-007
+HORN-008
+
+========================================
+BRASS - TUBAS (5)
+========================================
+TUBA-001
+TUBA-002
+TUBA-003
+TUBA-004
+TUBA-005
+
+========================================
+WOODWINDS - CLARINETS (25)
+========================================
+CLARINET-001
+CLARINET-002
+CLARINET-003
+CLARINET-004
+CLARINET-005
+CLARINET-006
+CLARINET-007
+CLARINET-008
+CLARINET-009
+CLARINET-010
+CLARINET-011
+CLARINET-012
+CLARINET-013
+CLARINET-014
+CLARINET-015
+CLARINET-016
+CLARINET-017
+CLARINET-018
+CLARINET-019
+CLARINET-020
+CLARINET-021
+CLARINET-022
+CLARINET-023
+CLARINET-024
+CLARINET-025
+
+========================================
+WOODWINDS - FLUTES (20)
+========================================
+FLUTE-001
+FLUTE-002
+FLUTE-003
+FLUTE-004
+FLUTE-005
+FLUTE-006
+FLUTE-007
+FLUTE-008
+FLUTE-009
+FLUTE-010
+FLUTE-011
+FLUTE-012
+FLUTE-013
+FLUTE-014
+FLUTE-015
+FLUTE-016
+FLUTE-017
+FLUTE-018
+FLUTE-019
+FLUTE-020
+
+========================================
+WOODWINDS - SAXOPHONES (10)
+========================================
+SAX-001
+SAX-002
+SAX-003
+SAX-004
+SAX-005
+SAX-006
+SAX-007
+SAX-008
+SAX-009
+SAX-010
+
+========================================
+PERCUSSION - DRUMS (30)
+========================================
+DRUM-001
+DRUM-002
+DRUM-003
+DRUM-004
+DRUM-005
+DRUM-006
+DRUM-007
+DRUM-008
+DRUM-009
+DRUM-010
+DRUM-011
+DRUM-012
+DRUM-013
+DRUM-014
+DRUM-015
+DRUM-016
+DRUM-017
+DRUM-018
+DRUM-019
+DRUM-020
+DRUM-021
+DRUM-022
+DRUM-023
+DRUM-024
+DRUM-025
+DRUM-026
+DRUM-027
+DRUM-028
+DRUM-029
+DRUM-030
+
+========================================
+PERCUSSION - OTHER (10)
+========================================
+PERCUSSION-001
+PERCUSSION-002
+PERCUSSION-003
+PERCUSSION-004
+PERCUSSION-005
+PERCUSSION-006
+PERCUSSION-007
+PERCUSSION-008
+PERCUSSION-009
+PERCUSSION-010
+
+========================================
+NOTES:
+========================================
+- Adjust quantities based on your needs
+- You can add more codes following the same pattern
+- Keep a copy of this list in a safe place
+- Consider laminating barcode labels for durability
+- Place barcodes on instrument cases when possible
+
+========================================
+TOTAL: 143 Instruments
+========================================
+

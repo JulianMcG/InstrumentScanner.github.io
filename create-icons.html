@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Icon Generator - Instrument Scanner</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', sans-serif;
+            max-width: 800px;
+            margin: 50px auto;
+            padding: 20px;
+            background: #F2F2F7;
+            min-height: 100vh;
+        }
+        .container {
+            background: white;
+            padding: 40px;
+            border-radius: 20px;
+            box-shadow: 0 2px 20px rgba(0,0,0,0.08);
+        }
+        h1 {
+            color: #007AFF;
+            margin-bottom: 10px;
+        }
+        .subtitle {
+            color: #8E8E93;
+            margin-bottom: 30px;
+        }
+        .instructions {
+            background: #F2F2F7;
+            padding: 20px;
+            border-radius: 12px;
+            margin: 20px 0;
+        }
+        .instructions h3 {
+            margin-top: 0;
+            color: #007AFF;
+        }
+        .instructions ol {
+            margin: 10px 0;
+            padding-left: 20px;
+        }
+        .instructions li {
+            margin: 8px 0;
+            line-height: 1.6;
+        }
+        canvas {
+            border: 2px solid #e5e7eb;
+            border-radius: 10px;
+            margin: 20px 0;
+            display: block;
+        }
+        button {
+            background: #007AFF;
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 12px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            margin: 10px 10px 10px 0;
+            transition: opacity 0.2s;
+            font-family: -apple-system, BlinkMacSystemFont, sans-serif;
+        }
+        button:hover {
+            opacity: 0.8;
+        }
+        button:active {
+            opacity: 0.6;
+        }
+        .icon-preview {
+            display: flex;
+            gap: 30px;
+            margin: 30px 0;
+            flex-wrap: wrap;
+        }
+        .preview-box {
+            text-align: center;
+        }
+        .preview-box p {
+            margin-top: 10px;
+            color: #666;
+            font-weight: 600;
+        }
+        .success {
+            background: rgba(52, 199, 89, 0.15);
+            color: #34C759;
+            padding: 15px;
+            border-radius: 12px;
+            margin: 20px 0;
+            display: none;
+            font-weight: 600;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>📹 Icon Generator</h1>
+        <p class="subtitle">Create icons for your Instrument Scanner app</p>
+
+        <div class="instructions">
+            <h3>Instructions:</h3>
+            <ol>
+                <li>Click the buttons below to generate each icon</li>
+                <li>Right-click (or long-press on mobile) on each icon</li>
+                <li>Select "Save Image As..."</li>
+                <li>Save with the exact filename shown (icon-192.png or icon-512.png)</li>
+                <li>Place both files in your app folder</li>
+            </ol>
+        </div>
+
+        <div class="icon-preview">
+            <div class="preview-box">
+                <canvas id="canvas-192" width="192" height="192"></canvas>
+                <p>icon-192.png</p>
+                <button onclick="generateIcon(192)">Generate 192x192</button>
+            </div>
+            <div class="preview-box">
+                <canvas id="canvas-512" width="512" height="512"></canvas>
+                <p>icon-512.png</p>
+                <button onclick="generateIcon(512)">Generate 512x512</button>
+            </div>
+        </div>
+
+        <div class="success" id="success">
+            ✅ Icons generated! Right-click each icon above to save it.
+        </div>
+
+        <button onclick="generateBoth()" style="background: #34C759;">
+            🚀 Generate Both Icons
+        </button>
+    </div>
+
+    <script>
+        function generateIcon(size) {
+            const canvas = document.getElementById(`canvas-${size}`);
+            const ctx = canvas.getContext('2d');
+            
+            // Create iOS blue background
+            const radius = size * 0.2;
+            ctx.fillStyle = '#007AFF';
+            roundRect(ctx, 0, 0, size, size, radius);
+            ctx.fill();
+            
+            // Draw white rounded square in center (like iOS icon style)
+            const innerSize = size * 0.65;
+            const innerX = (size - innerSize) / 2;
+            const innerRadius = size * 0.12;
+            ctx.fillStyle = 'rgba(255, 255, 255, 0.95)';
+            roundRect(ctx, innerX, innerX, innerSize, innerSize, innerRadius);
+            ctx.fill();
+            
+            // Draw barcode icon using rectangles (simple barcode representation)
+            const barcodeWidth = innerSize * 0.7;
+            const barcodeHeight = innerSize * 0.4;
+            const barcodeX = (size - barcodeWidth) / 2;
+            const barcodeY = (size - barcodeHeight) / 2;
+            
+            ctx.fillStyle = '#007AFF';
+            
+            // Draw barcode lines
+            const lineWidth = barcodeWidth / 12;
+            for (let i = 0; i < 12; i++) {
+                if (i % 3 !== 1) { // Skip some lines for barcode effect
+                    ctx.fillRect(barcodeX + (i * lineWidth), barcodeY, lineWidth * 0.6, barcodeHeight);
+                }
+            }
+            
+            // Show success message
+            document.getElementById('success').style.display = 'block';
+        }
+
+        function roundRect(ctx, x, y, width, height, radius) {
+            ctx.beginPath();
+            ctx.moveTo(x + radius, y);
+            ctx.lineTo(x + width - radius, y);
+            ctx.quadraticCurveTo(x + width, y, x + width, y + radius);
+            ctx.lineTo(x + width, y + height - radius);
+            ctx.quadraticCurveTo(x + width, y + height, x + width - radius, y + height);
+            ctx.lineTo(x + radius, y + height);
+            ctx.quadraticCurveTo(x, y + height, x, y + height - radius);
+            ctx.lineTo(x, y + radius);
+            ctx.quadraticCurveTo(x, y, x + radius, y);
+            ctx.closePath();
+        }
+
+        function generateBoth() {
+            generateIcon(192);
+            generateIcon(512);
+        }
+
+        function downloadCanvas(canvas, filename) {
+            const link = document.createElement('a');
+            link.download = filename;
+            link.href = canvas.toDataURL('image/png');
+            link.click();
+        }
+
+        // Auto-generate on load
+        window.onload = function() {
+            generateBoth();
+        };
+    </script>
+</body>
+</html>
+
