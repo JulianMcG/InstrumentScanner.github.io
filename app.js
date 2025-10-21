@@ -178,6 +178,10 @@ function onScanSuccess(decodedText) {
     // Store the scanned code
     currentScannedCode = decodedText;
     
+    // Hide scan guide
+    const scanGuide = document.querySelector('.scan-guide');
+    if (scanGuide) scanGuide.style.display = 'none';
+    
     // Show the form
     document.getElementById('serial-number').value = decodedText;
     document.getElementById('scan-form').classList.remove('hidden');
@@ -255,6 +259,10 @@ function handleCheckInOut(status) {
     // Hide form and resume scanning
     document.getElementById('scan-form').classList.add('hidden');
     
+    // Show scan guide again
+    const scanGuide = document.querySelector('.scan-guide');
+    if (scanGuide) scanGuide.style.display = 'flex';
+    
     // Reset after 1.5 seconds and resume scanning
     setTimeout(() => {
         hideMessage();
@@ -270,6 +278,10 @@ function resetScanForm() {
     document.getElementById('instrument-type').value = '';
     document.getElementById('person-name').value = '';
     currentScannedCode = null;
+    
+    // Show scan guide again
+    const scanGuide = document.querySelector('.scan-guide');
+    if (scanGuide) scanGuide.style.display = 'flex';
     
     // Resume scanning
     resumeScanning();
