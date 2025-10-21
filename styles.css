@@ -702,50 +702,152 @@ body {
 }
 
 /* ========================================
-   Tab Bar (iOS Style)
+   Tab Bar - Floating Pill & Circle Design
    ======================================== */
 
-.tab-bar {
+.tab-bar-container {
     position: fixed;
-    bottom: 0;
+    bottom: max(20px, env(safe-area-inset-bottom) + 10px);
     left: 0;
     right: 0;
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    padding: 0 20px;
+    z-index: 999;
+    pointer-events: none;
+}
+
+/* Pill shape for Scan and Inventory */
+.tab-bar-pill {
+    display: flex;
     background: var(--tab-bar-bg);
     backdrop-filter: saturate(180%) blur(20px);
     -webkit-backdrop-filter: saturate(180%) blur(20px);
-    display: flex;
-    padding: 8px 0;
-    padding-bottom: max(8px, env(safe-area-inset-bottom));
-    border-top: 0.5px solid var(--separator);
-    z-index: 999;
+    border-radius: 100px;
+    padding: 6px;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+    pointer-events: auto;
+    position: relative;
 }
 
-.tab-btn {
-    flex: 1;
+/* Sliding selection indicator */
+.tab-bar-pill::before {
+    content: '';
+    position: absolute;
+    top: 6px;
+    left: 6px;
+    width: calc(50% - 6px);
+    height: calc(100% - 12px);
+    background: rgba(255, 255, 255, 0.95);
+    border-radius: 100px;
+    z-index: 0;
+    transition: transform 0.3s ease, opacity 0.3s ease;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.12);
+}
+
+@media (prefers-color-scheme: dark) {
+    .tab-bar-pill::before {
+        background: rgba(255, 255, 255, 0.15);
+    }
+}
+
+/* Slide indicator when inventory is active */
+.tab-bar-pill[data-active="inventory"]::before {
+    transform: translateX(100%);
+}
+
+/* Hide pill indicator when search is active */
+.tab-bar-pill[data-active="search"]::before {
+    opacity: 0;
+}
+
+.tab-bar-pill .tab-btn {
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 4px;
-    padding: 4px;
+    justify-content: center;
+    gap: 2px;
+    padding: 8px 0;
     border: none;
     background: transparent;
     cursor: pointer;
     color: var(--ios-gray);
     transition: color 0.2s ease;
     font-family: -apple-system, BlinkMacSystemFont, sans-serif;
+    border-radius: 100px;
+    position: relative;
+    z-index: 1;
+    flex: 1;
+    min-width: 80px;
 }
 
-.tab-btn.active {
+.tab-bar-pill .tab-btn.active {
     color: var(--ios-blue);
 }
 
-.tab-icon {
-    font-size: 28px;
+.tab-bar-pill .tab-btn:active {
+    transform: scale(0.95);
 }
 
-.tab-label {
+.tab-bar-pill .tab-icon {
+    font-size: 24px;
+    transition: color 0.2s ease;
+}
+
+.tab-bar-pill .tab-btn.active .tab-icon {
+    color: var(--ios-blue);
+}
+
+.tab-bar-pill .tab-label {
     font-size: 10px;
-    font-weight: 500;
+    font-weight: 600;
+    letter-spacing: 0.2px;
+}
+
+/* Circle shape for Search - matches pill style */
+.tab-btn-circle {
+    width: 56px;
+    height: 56px;
+    border-radius: 50%;
+    background: var(--tab-bar-bg);
+    backdrop-filter: saturate(180%) blur(20px);
+    -webkit-backdrop-filter: saturate(180%) blur(20px);
+    border: none;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    color: var(--ios-gray);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+    transition: all 0.2s ease;
+    pointer-events: auto;
+    font-family: -apple-system, BlinkMacSystemFont, sans-serif;
+    position: relative;
+}
+
+/* Selection indicator for circle - never shown */
+.tab-btn-circle::before {
+    display: none;
+}
+
+.tab-btn-circle .material-symbols-rounded {
+    font-size: 28px;
+    position: relative;
+    z-index: 1;
+    transition: color 0.2s ease;
+}
+
+.tab-btn-circle.active {
+    color: var(--ios-blue);
+}
+
+.tab-btn-circle.active .material-symbols-rounded {
+    color: var(--ios-blue);
+}
+
+.tab-btn-circle:active {
+    transform: scale(0.92);
 }
 
 /* ========================================
