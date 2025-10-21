@@ -308,6 +308,8 @@ function hideMessage() {
 // ========================================
 function initInventoryPage() {
     const filterButtons = document.querySelectorAll('.filter-btn');
+    const searchInput = document.getElementById('search-input');
+    const clearSearchBtn = document.getElementById('clear-search');
     
     filterButtons.forEach(btn => {
         btn.addEventListener('click', () => {
@@ -317,16 +319,39 @@ function initInventoryPage() {
             
             // Apply filter
             const filter = btn.dataset.filter;
-            renderInventory(filter);
+            renderInventory(filter, searchInput.value);
         });
+    });
+    
+    // Search functionality
+    searchInput.addEventListener('input', (e) => {
+        const searchTerm = e.target.value;
+        const activeFilter = document.querySelector('.filter-btn.active').dataset.filter;
+        
+        // Show/hide clear button
+        if (searchTerm) {
+            clearSearchBtn.classList.remove('hidden');
+        } else {
+            clearSearchBtn.classList.add('hidden');
+        }
+        
+        renderInventory(activeFilter, searchTerm);
+    });
+    
+    clearSearchBtn.addEventListener('click', () => {
+        searchInput.value = '';
+        clearSearchBtn.classList.add('hidden');
+        const activeFilter = document.querySelector('.filter-btn.active').dataset.filter;
+        renderInventory(activeFilter, '');
+        searchInput.focus();
     });
 }
 
-function renderInventory(filter = 'all') {
+function renderInventory(filter = 'all', searchTerm = '') {
     const inventoryList = document.getElementById('inventory-list');
     const emptyState = document.getElementById('empty-state');
     
-    // Filter instruments
+    // Filter instruments by status
     let filteredInstruments = instruments;
     if (filter === 'checked-out') {
         filteredInstruments = instruments.filter(i => i.status === 'checked-out');
@@ -334,10 +359,27 @@ function renderInventory(filter = 'all') {
         filteredInstruments = instruments.filter(i => i.status === 'checked-in');
     }
     
+    // Filter by search term
+    if (searchTerm) {
+        const searchLower = searchTerm.toLowerCase();
+        filteredInstruments = filteredInstruments.filter(i => {
+            return i.instrumentType.toLowerCase().includes(searchLower) ||
+                   i.personName.toLowerCase().includes(searchLower) ||
+                   i.serialNumber.toLowerCase().includes(searchLower);
+        });
+    }
+    
     // Show/hide empty state
     if (filteredInstruments.length === 0) {
         inventoryList.innerHTML = '';
         emptyState.classList.remove('hidden');
+        if (searchTerm) {
+            document.querySelector('.empty-state p:first-of-type').textContent = 'No results found';
+            document.querySelector('.empty-state p:last-of-type').textContent = `Try a different search term`;
+        } else {
+            document.querySelector('.empty-state p:first-of-type').textContent = 'No instruments yet';
+            document.querySelector('.empty-state p:last-of-type').textContent = 'Start by scanning an instrument';
+        }
         return;
     }
     
