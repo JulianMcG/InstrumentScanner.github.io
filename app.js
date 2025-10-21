@@ -16,6 +16,7 @@ document.addEventListener('DOMContentLoaded', () => {
     initTabNavigation();
     initScanPage();
     initInventoryPage();
+    initSearchPage();
     updateStats();
     renderInventory();
     
@@ -308,8 +309,6 @@ function hideMessage() {
 // ========================================
 function initInventoryPage() {
     const filterButtons = document.querySelectorAll('.filter-btn');
-    const searchInput = document.getElementById('search-input');
-    const clearSearchBtn = document.getElementById('clear-search');
     
     filterButtons.forEach(btn => {
         btn.addEventListener('click', () => {
@@ -319,14 +318,18 @@ function initInventoryPage() {
             
             // Apply filter
             const filter = btn.dataset.filter;
-            renderInventory(filter, searchInput.value);
+            renderInventory(filter);
         });
     });
+}
+
+function initSearchPage() {
+    const searchInput = document.getElementById('search-input');
+    const clearSearchBtn = document.getElementById('clear-search');
     
     // Search functionality
     searchInput.addEventListener('input', (e) => {
         const searchTerm = e.target.value;
-        const activeFilter = document.querySelector('.filter-btn.active').dataset.filter;
         
         // Show/hide clear button
         if (searchTerm) {
@@ -335,19 +338,18 @@ function initInventoryPage() {
             clearSearchBtn.classList.add('hidden');
         }
         
-        renderInventory(activeFilter, searchTerm);
+        renderSearchResults(searchTerm);
     });
     
     clearSearchBtn.addEventListener('click', () => {
         searchInput.value = '';
         clearSearchBtn.classList.add('hidden');
-        const activeFilter = document.querySelector('.filter-btn.active').dataset.filter;
-        renderInventory(activeFilter, '');
+        renderSearchResults('');
         searchInput.focus();
     });
 }
 
-function renderInventory(filter = 'all', searchTerm = '') {
+function renderInventory(filter = 'all') {
     const inventoryList = document.getElementById('inventory-list');
     const emptyState = document.getElementById('empty-state');
     
@@ -359,27 +361,12 @@ function renderInventory(filter = 'all', searchTerm = '') {
         filteredInstruments = instruments.filter(i => i.status === 'checked-in');
     }
     
-    // Filter by search term
-    if (searchTerm) {
-        const searchLower = searchTerm.toLowerCase();
-        filteredInstruments = filteredInstruments.filter(i => {
-            return i.instrumentType.toLowerCase().includes(searchLower) ||
-                   i.personName.toLowerCase().includes(searchLower) ||
-                   i.serialNumber.toLowerCase().includes(searchLower);
-        });
-    }
-    
     // Show/hide empty state
     if (filteredInstruments.length === 0) {
         inventoryList.innerHTML = '';
         emptyState.classList.remove('hidden');
-        if (searchTerm) {
-            document.querySelector('.empty-state p:first-of-type').textContent = 'No results found';
-            document.querySelector('.empty-state p:last-of-type').textContent = `Try a different search term`;
-        } else {
-            document.querySelector('.empty-state p:first-of-type').textContent = 'No instruments yet';
-            document.querySelector('.empty-state p:last-of-type').textContent = 'Start by scanning an instrument';
-        }
+        document.querySelector('#empty-state p:first-of-type').textContent = 'No instruments yet';
+        document.querySelector('#empty-state p:last-of-type').textContent = 'Start by scanning an instrument';
         return;
     }
     
@@ -411,6 +398,66 @@ function renderInventory(filter = 'all', searchTerm = '') {
     });
     
     inventoryList.innerHTML = html;
+}
+
+function renderSearchResults(searchTerm = '') {
+    const searchResults = document.getElementById('search-results');
+    const emptyState = document.getElementById('search-empty-state');
+    
+    // If no search term, show empty state
+    if (!searchTerm) {
+        searchResults.innerHTML = '';
+        emptyState.classList.remove('hidden');
+        document.querySelector('#search-empty-state p:first-of-type').textContent = 'Search for instruments';
+        document.querySelector('#search-empty-state p:last-of-type').textContent = 'Enter a name, serial number, or instrument type';
+        return;
+    }
+    
+    // Filter by search term
+    const searchLower = searchTerm.toLowerCase();
+    const filteredInstruments = instruments.filter(i => {
+        return i.instrumentType.toLowerCase().includes(searchLower) ||
+               i.personName.toLowerCase().includes(searchLower) ||
+               i.serialNumber.toLowerCase().includes(searchLower);
+    });
+    
+    // Show/hide empty state
+    if (filteredInstruments.length === 0) {
+        searchResults.innerHTML = '';
+        emptyState.classList.remove('hidden');
+        document.querySelector('#search-empty-state p:first-of-type').textContent = 'No results found';
+        document.querySelector('#search-empty-state p:last-of-type').textContent = 'Try a different search term';
+        return;
+    }
+    
+    emptyState.classList.add('hidden');
+    
+    // Group by instrument type
+    const grouped = {};
+    filteredInstruments.forEach(instrument => {
+        const type = instrument.instrumentType;
+        if (!grouped[type]) {
+            grouped[type] = [];
+        }
+        grouped[type].push(instrument);
+    });
+    
+    // Render grouped instruments
+    let html = '';
+    const sortedTypes = Object.keys(grouped).sort();
+    
+    sortedTypes.forEach(type => {
+        html += `<div class="category-header">${type}s</div>`;
+        
+        // Sort by timestamp (newest first)
+        grouped[type].sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+        
+        grouped[type].forEach(instrument => {
+            html += createInstrumentCard(instrument);
+        });
+    });
+    
+    searchResults.innerHTML = html;
 }
 
 function createInstrumentCard(instrument) {
