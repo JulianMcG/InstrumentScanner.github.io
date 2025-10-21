@@ -77,7 +77,10 @@ function addOrUpdateInstrument(serialNumber, instrumentType, personName, status)
 // ========================================
 function initTabNavigation() {
     const tabButtons = document.querySelectorAll('.tab-btn');
+    const circleButton = document.querySelector('.tab-btn-circle');
+    const pillContainer = document.querySelector('.tab-bar-pill');
     
+    // Handle pill tab buttons
     tabButtons.forEach(btn => {
         btn.addEventListener('click', () => {
             const targetPage = btn.dataset.page;
@@ -89,10 +92,18 @@ function initTabNavigation() {
             document.querySelectorAll('.tab-btn').forEach(tab => {
                 tab.classList.remove('active');
             });
+            circleButton.classList.remove('active');
             
             // Activate target
             document.getElementById(targetPage).classList.add('active');
             btn.classList.add('active');
+            
+            // Update pill container data attribute for sliding animation
+            if (targetPage === 'inventory-page') {
+                pillContainer.setAttribute('data-active', 'inventory');
+            } else {
+                pillContainer.setAttribute('data-active', 'scan');
+            }
             
             // Handle camera based on page
             if (targetPage === 'scan-page') {
@@ -110,6 +121,29 @@ function initTabNavigation() {
                 renderInventory();
             }
         });
+    });
+    
+    // Handle circle button
+    circleButton.addEventListener('click', () => {
+        const targetPage = circleButton.dataset.page;
+        
+        // Update active states
+        document.querySelectorAll('.page').forEach(page => {
+            page.classList.remove('active');
+        });
+        document.querySelectorAll('.tab-btn').forEach(tab => {
+            tab.classList.remove('active');
+        });
+        
+        // Activate target
+        document.getElementById(targetPage).classList.add('active');
+        circleButton.classList.add('active');
+        
+        // Hide pill indicator when search is active
+        pillContainer.setAttribute('data-active', 'search');
+        
+        // Stop camera when leaving scan page
+        stopScanning();
     });
 }
 
