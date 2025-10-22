@@ -145,6 +145,8 @@ body {
 /* Customize the scanning region overlay */
 #reader__scan_region {
     border: none !important;
+    position: relative !important;
+    top: 20% !important; /* Move scanning box up */
 }
 
 #reader__scan_region video {
@@ -154,6 +156,20 @@ body {
 /* Style the QR box frame with rounded corners */
 #reader__scan_region img {
     display: none !important;
+}
+
+/* Round the scanning box corners */
+#reader__scan_region > div {
+    border-radius: 20px !important;
+    border: 2px solid rgba(255, 255, 255, 0.8) !important;
+    box-shadow: 0 0 0 2px rgba(0, 0, 0, 0.3) !important;
+}
+
+/* Position the scanning box in the center of the upper area */
+#reader__scan_region > div:first-child {
+    border-radius: 20px !important;
+    border: 2px solid rgba(255, 255, 255, 0.8) !important;
+    box-shadow: 0 0 0 2px rgba(0, 0, 0, 0.3) !important;
 }
 
 /* Remove darkening overlays but keep scanning functionality */
@@ -256,6 +272,7 @@ body {
     animation: slideUp 0.3s ease;
     max-height: 70vh;
     overflow-y: auto;
+    margin-bottom: 80px; /* Move up to avoid tab bar */
     -webkit-overflow-scrolling: touch;
 }
 
