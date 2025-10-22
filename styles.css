@@ -142,22 +142,29 @@ body {
     box-shadow: none !important;
 }
 
-/* Remove ALL scanner overlays, borders, and darkening */
+/* Customize the scanning region overlay */
 #reader__scan_region {
     border: none !important;
-    background: transparent !important;
 }
 
 #reader__scan_region video {
     border-radius: 0 !important;
 }
 
+/* Style the QR box frame with rounded corners */
 #reader__scan_region img {
     display: none !important;
 }
 
-#reader__scan_region canvas {
-    display: none !important;
+/* REMOVE ALL OVERLAYS, DARKENING, AND GUIDELINES - EVERYTHING! */
+#reader > div > div {
+    background: transparent !important;
+    box-shadow: none !important;
+}
+
+#reader__scan_region {
+    background: transparent !important;
+    border: none !important;
 }
 
 #reader__scan_region > div {
@@ -172,28 +179,19 @@ body {
     background: transparent !important;
 }
 
-#reader > div > div {
-    background: transparent !important;
-    box-shadow: none !important;
-    border: none !important;
-}
-
+/* Remove ALL canvases, overlays and darkening layers */
 #reader canvas {
     display: none !important;
 }
 
 #reader > div {
     background: transparent !important;
-    border: none !important;
 }
 
-/* Hide all possible overlays */
-#reader__scan_region__overlay {
-    display: none !important;
-}
-
-#reader div[style*="background"] {
+#reader * {
     background: transparent !important;
+    box-shadow: none !important;
+    border: none !important;
 }
 
 /* Hide the default QR scanner UI elements */
@@ -717,68 +715,50 @@ body {
 
 .tab-bar-container {
     position: fixed;
-    bottom: 20px;
+    bottom: max(20px, env(safe-area-inset-bottom) + 10px);
     left: 0;
     right: 0;
     display: flex;
     justify-content: space-between;
     align-items: flex-end;
-    padding: 0 20px 20px 20px;
-    padding-bottom: max(20px, env(safe-area-inset-bottom));
+    padding: 0 20px;
     z-index: 999;
     pointer-events: none;
 }
 
-/* Glassmorphism effect for pill */
+/* Pill shape for Scan and Inventory */
 .tab-bar-pill {
     display: flex;
-    background: rgba(255, 255, 255, 0.7);
-    backdrop-filter: blur(10px) saturate(180%);
-    -webkit-backdrop-filter: blur(10px) saturate(180%);
+    background: var(--tab-bar-bg);
+    backdrop-filter: saturate(180%) blur(20px);
+    -webkit-backdrop-filter: saturate(180%) blur(20px);
     border-radius: 100px;
-    padding: 8px;
-    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1),
-                inset 0 1px 0 rgba(255, 255, 255, 0.8);
-    border: 1px solid rgba(255, 255, 255, 0.3);
+    padding: 6px;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15),
+                inset 0 1px 0 rgba(255, 255, 255, 0.15);
     pointer-events: auto;
     position: relative;
-    min-width: 200px;
+    min-width: 220px;
 }
 
-@media (prefers-color-scheme: dark) {
-    .tab-bar-pill {
-        background: rgba(28, 28, 30, 0.7);
-        border: 1px solid rgba(255, 255, 255, 0.1);
-        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3),
-                    inset 0 1px 0 rgba(255, 255, 255, 0.1);
-    }
-}
-
-/* Sliding selection indicator with glassmorphism */
+/* Sliding selection indicator - more subtle */
 .tab-bar-pill::before {
     content: '';
     position: absolute;
-    top: 8px;
-    left: 8px;
-    width: calc(50% - 8px);
-    height: calc(100% - 16px);
-    background: rgba(255, 255, 255, 0.95);
-    backdrop-filter: blur(10px);
-    -webkit-backdrop-filter: blur(10px);
+    top: 6px;
+    left: 6px;
+    width: calc(50% - 6px);
+    height: calc(100% - 12px);
+    background: rgba(255, 255, 255, 0.6);
     border-radius: 100px;
     z-index: 0;
     transition: transform 0.3s ease, opacity 0.3s ease;
-    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1),
-                inset 0 1px 0 rgba(255, 255, 255, 1);
-    border: 1px solid rgba(255, 255, 255, 0.8);
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.08);
 }
 
 @media (prefers-color-scheme: dark) {
     .tab-bar-pill::before {
-        background: rgba(255, 255, 255, 0.2);
-        border: 1px solid rgba(255, 255, 255, 0.2);
-        box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3),
-                    inset 0 1px 0 rgba(255, 255, 255, 0.2);
+        background: rgba(255, 255, 255, 0.12);
     }
 }
 
@@ -835,35 +815,26 @@ body {
     letter-spacing: 0.2px;
 }
 
-/* Circle shape for Search - glassmorphism style */
+/* Circle shape for Search - matches pill style */
 .tab-btn-circle {
     width: 56px;
     height: 56px;
     border-radius: 50%;
-    background: rgba(255, 255, 255, 0.7);
-    backdrop-filter: blur(10px) saturate(180%);
-    -webkit-backdrop-filter: blur(10px) saturate(180%);
-    border: 1px solid rgba(255, 255, 255, 0.3);
+    background: var(--tab-bar-bg);
+    backdrop-filter: saturate(180%) blur(20px);
+    -webkit-backdrop-filter: saturate(180%) blur(20px);
+    border: none;
     display: flex;
     align-items: center;
     justify-content: center;
     cursor: pointer;
     color: var(--ios-gray);
-    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1),
-                inset 0 1px 0 rgba(255, 255, 255, 0.8);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15),
+                inset 0 1px 0 rgba(255, 255, 255, 0.15);
     transition: all 0.2s ease;
     pointer-events: auto;
     font-family: -apple-system, BlinkMacSystemFont, sans-serif;
     position: relative;
-}
-
-@media (prefers-color-scheme: dark) {
-    .tab-btn-circle {
-        background: rgba(28, 28, 30, 0.7);
-        border: 1px solid rgba(255, 255, 255, 0.1);
-        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3),
-                    inset 0 1px 0 rgba(255, 255, 255, 0.1);
-    }
 }
 
 /* Selection indicator for circle - never shown */
