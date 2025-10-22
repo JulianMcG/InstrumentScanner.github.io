@@ -619,55 +619,23 @@ function initHamburgerMenus() {
     });
     
     closeHamburger.addEventListener('click', () => {
-        const hamburgerContent = document.querySelector('.hamburger-content');
-        hamburgerContent.classList.add('closing');
-        hamburgerOverlay.classList.add('closing');
-        
-        setTimeout(() => {
-            hamburgerOverlay.classList.add('hidden');
-            hamburgerContent.classList.remove('closing');
-            hamburgerOverlay.classList.remove('closing');
-        }, 200);
+        hamburgerOverlay.classList.add('hidden');
     });
     
     hamburgerOverlay.addEventListener('click', (e) => {
         if (e.target === hamburgerOverlay) {
-            const hamburgerContent = document.querySelector('.hamburger-content');
-            hamburgerContent.classList.add('closing');
-            hamburgerOverlay.classList.add('closing');
-            
-            setTimeout(() => {
-                hamburgerOverlay.classList.add('hidden');
-                hamburgerContent.classList.remove('closing');
-                hamburgerOverlay.classList.remove('closing');
-            }, 300);
+            hamburgerOverlay.classList.add('hidden');
         }
     });
     
     manualEntryOption.addEventListener('click', () => {
-        const hamburgerContent = document.querySelector('.hamburger-content');
-        hamburgerContent.classList.add('closing');
-        hamburgerOverlay.classList.add('closing');
-        
-        setTimeout(() => {
-            hamburgerOverlay.classList.add('hidden');
-            hamburgerContent.classList.remove('closing');
-            hamburgerOverlay.classList.remove('closing');
-            showManualEntryForm();
-        }, 300);
+        hamburgerOverlay.classList.add('hidden');
+        showManualEntryForm();
     });
     
     addInstrumentOption.addEventListener('click', () => {
-        const hamburgerContent = document.querySelector('.hamburger-content');
-        hamburgerContent.classList.add('closing');
-        hamburgerOverlay.classList.add('closing');
-        
-        setTimeout(() => {
-            hamburgerOverlay.classList.add('hidden');
-            hamburgerContent.classList.remove('closing');
-            hamburgerOverlay.classList.remove('closing');
-            showAddInstrumentForm();
-        }, 300);
+        hamburgerOverlay.classList.add('hidden');
+        showAddInstrumentForm();
     });
 }
 
