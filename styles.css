@@ -67,6 +67,7 @@ body {
     width: 100%;
     height: 100vh;
     height: 100dvh;
+    touch-action: manipulation;
 }
 
 /* ========================================
@@ -126,6 +127,7 @@ body {
     position: absolute !important;
     top: 0 !important;
     left: 0 !important;
+    animation: cameraFadeIn 0.6s ease-out;
 }
 
 .scanner-container.full-screen #reader video {
@@ -135,6 +137,23 @@ body {
     position: absolute !important;
     top: 0 !important;
     left: 0 !important;
+    animation: cameraFadeIn 0.6s ease-out;
+}
+
+@keyframes cameraFadeIn {
+    0% {
+        opacity: 0;
+        filter: blur(20px);
+        transform: scale(1.05);
+    }
+    60% {
+        opacity: 1;
+    }
+    100% {
+        opacity: 1;
+        filter: blur(0px);
+        transform: scale(1);
+    }
 }
 
 .scanner-container.full-screen #reader > div:first-child {
@@ -329,11 +348,16 @@ body {
     justify-content: center;
     gap: 8px;
     font-family: -apple-system, BlinkMacSystemFont, sans-serif;
+    touch-action: manipulation;
+    -webkit-user-select: none;
+    user-select: none;
 }
 
-.btn:active {
+.btn:active,
+.btn:focus {
     opacity: 0.6;
     transform: scale(0.98);
+    -webkit-tap-highlight-color: transparent;
 }
 
 .btn-success {
@@ -530,10 +554,14 @@ body {
     align-items: center;
     justify-content: center;
     border-radius: 50%;
+    transition: opacity 0.2s ease, transform 0.15s ease;
 }
 
-.clear-search:active {
+.clear-search:active,
+.clear-search:focus {
     opacity: 0.6;
+    transform: scale(0.9);
+    -webkit-tap-highlight-color: transparent;
 }
 
 .clear-search .material-symbols-rounded {
@@ -598,6 +626,12 @@ body {
     color: var(--text-primary);
 }
 
+.filter-btn:active,
+.filter-btn:focus {
+    transform: scale(0.97);
+    -webkit-tap-highlight-color: transparent;
+}
+
 /* ========================================
    Inventory List
    ======================================== */
@@ -638,9 +672,11 @@ body {
     transition: transform 0.2s ease, opacity 0.2s ease;
 }
 
-.instrument-card:active {
+.instrument-card:active,
+.instrument-card:focus {
     transform: scale(0.98);
     opacity: 0.8;
+    -webkit-tap-highlight-color: transparent;
 }
 
 .instrument-header {
@@ -810,14 +846,19 @@ body {
     z-index: 1;
     flex: 1;
     min-width: 80px;
+    touch-action: manipulation;
+    -webkit-user-select: none;
+    user-select: none;
 }
 
 .tab-bar-pill .tab-btn.active {
     color: var(--ios-blue);
 }
 
-.tab-bar-pill .tab-btn:active {
+.tab-bar-pill .tab-btn:active,
+.tab-bar-pill .tab-btn:focus {
     transform: scale(0.95);
+    -webkit-tap-highlight-color: transparent;
 }
 
 .tab-bar-pill .tab-icon {
@@ -855,6 +896,9 @@ body {
     pointer-events: auto;
     font-family: -apple-system, BlinkMacSystemFont, sans-serif;
     position: relative;
+    touch-action: manipulation;
+    -webkit-user-select: none;
+    user-select: none;
 }
 
 /* Selection indicator for circle - never shown */
@@ -879,8 +923,10 @@ body {
     color: var(--ios-blue);
 }
 
-.tab-btn-circle:active {
+.tab-btn-circle:active,
+.tab-btn-circle:focus {
     transform: scale(0.92);
+    -webkit-tap-highlight-color: transparent;
 }
 
 /* ========================================
