@@ -146,7 +146,7 @@ body {
 #reader__scan_region {
     border: none !important;
     position: relative !important;
-    top: 20% !important; /* Move scanning box up */
+    top: 10% !important; /* Move scanning box much higher */
 }
 
 #reader__scan_region video {
@@ -747,7 +747,7 @@ body {
 
 .tab-bar-container {
     position: fixed;
-    bottom: max(20px, env(safe-area-inset-bottom) + 10px);
+    bottom: max(40px, env(safe-area-inset-bottom) + 40px);
     left: 0;
     right: 0;
     display: flex;
