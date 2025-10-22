@@ -214,7 +214,7 @@ body {
 /* Scan Guide Text Overlay */
 .scan-guide {
     position: absolute;
-    bottom: 120px;
+    bottom: 200px;
     left: 0;
     right: 0;
     display: flex;
@@ -224,15 +224,10 @@ body {
 }
 
 .scan-guide-text {
-    background: var(--card-bg);
-    backdrop-filter: saturate(180%) blur(20px);
-    -webkit-backdrop-filter: saturate(180%) blur(20px);
     color: var(--text-primary);
-    padding: 12px 24px;
-    border-radius: 100px;
-    font-size: 15px;
-    font-weight: 600;
-    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.15);
+    font-size: 13px;
+    font-weight: 500;
+    opacity: 0.8;
     animation: fadeIn 0.5s ease-in;
 }
 
@@ -726,6 +721,41 @@ body {
     pointer-events: none;
 }
 
+/* Progressive blur background - only on scan page */
+#scan-page .tab-bar-container::before {
+    content: '';
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 200px;
+    background: linear-gradient(to top, 
+        rgba(0, 0, 0, 0.15) 0%,
+        rgba(0, 0, 0, 0.08) 30%,
+        transparent 100%);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    mask-image: linear-gradient(to top,
+        black 0%,
+        black 40%,
+        transparent 100%);
+    -webkit-mask-image: linear-gradient(to top,
+        black 0%,
+        black 40%,
+        transparent 100%);
+    pointer-events: none;
+    z-index: -1;
+}
+
+@media (prefers-color-scheme: dark) {
+    #scan-page .tab-bar-container::before {
+        background: linear-gradient(to top, 
+            rgba(0, 0, 0, 0.3) 0%,
+            rgba(0, 0, 0, 0.15) 30%,
+            transparent 100%);
+    }
+}
+
 /* Pill shape for Scan and Inventory */
 .tab-bar-pill {
     display: flex;
@@ -741,7 +771,7 @@ body {
     min-width: 220px;
 }
 
-/* Sliding selection indicator - more subtle */
+/* Sliding selection indicator - darkens in light, brightens in dark */
 .tab-bar-pill::before {
     content: '';
     position: absolute;
@@ -749,11 +779,10 @@ body {
     left: 6px;
     width: calc(50% - 6px);
     height: calc(100% - 12px);
-    background: rgba(255, 255, 255, 0.6);
+    background: rgba(0, 0, 0, 0.08);
     border-radius: 100px;
     z-index: 0;
     transition: transform 0.3s ease, opacity 0.3s ease;
-    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.08);
 }
 
 @media (prefers-color-scheme: dark) {
@@ -782,7 +811,7 @@ body {
     border: none;
     background: transparent;
     cursor: pointer;
-    color: var(--ios-gray);
+    color: var(--text-primary);
     transition: color 0.2s ease;
     font-family: -apple-system, BlinkMacSystemFont, sans-serif;
     border-radius: 100px;
@@ -815,10 +844,10 @@ body {
     letter-spacing: 0.2px;
 }
 
-/* Circle shape for Search - matches pill style */
+/* Circle shape for Search - matches pill height exactly */
 .tab-btn-circle {
-    width: 56px;
-    height: 56px;
+    height: 68px;
+    width: 68px;
     border-radius: 50%;
     background: var(--tab-bar-bg);
     backdrop-filter: saturate(180%) blur(20px);
@@ -828,7 +857,7 @@ body {
     align-items: center;
     justify-content: center;
     cursor: pointer;
-    color: var(--ios-gray);
+    color: var(--text-primary);
     box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15),
                 inset 0 1px 0 rgba(255, 255, 255, 0.15);
     transition: all 0.2s ease;
@@ -847,6 +876,8 @@ body {
     position: relative;
     z-index: 1;
     transition: color 0.2s ease;
+    /* Optical centering - slightly down and right */
+    transform: translate(0.5px, 1px);
 }
 
 .tab-btn-circle.active {
