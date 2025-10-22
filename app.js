@@ -41,7 +41,7 @@ function saveInstruments() {
     localStorage.setItem('instruments', JSON.stringify(instruments));
 }
 
-function addOrUpdateInstrument(serialNumber, instrumentType, personName, status) {
+function addOrUpdateInstrument(serialNumber, instrumentType, personName, status, physicalSerialNumber = null) {
     const timestamp = new Date().toLocaleString();
     
     // Add school identifier if not present
@@ -64,7 +64,8 @@ function addOrUpdateInstrument(serialNumber, instrumentType, personName, status)
             personName,
             status,
             timestamp,
-            instrumentType
+            instrumentType,
+            physicalSerialNumber: physicalSerialNumber || instruments[existingIndex].physicalSerialNumber
         };
     } else {
         // Add new instrument
@@ -74,6 +75,7 @@ function addOrUpdateInstrument(serialNumber, instrumentType, personName, status)
             personName,
             status,
             timestamp,
+            physicalSerialNumber,
             id: Date.now()
         });
     }
@@ -214,7 +216,7 @@ function startScanning() {
     html5QrCode = new Html5Qrcode("reader");
     
     const config = {
-        fps: 30, // Increased FPS for faster scanning
+        fps: 60, // Maximum FPS for fastest scanning
         qrbox: { width: 250, height: 250 },
         aspectRatio: 1.0,
         disableFlip: false,
@@ -222,7 +224,9 @@ function startScanning() {
         showTorchButtonIfSupported: false,
         experimentalFeatures: {
             useBarCodeDetectorIfSupported: true // Use native barcode detection for better accuracy
-        }
+        },
+        useBarCodeDetectorIfSupported: true, // Additional barcode detection
+        verbose: false // Reduce console output for better performance
     };
     
     html5QrCode.start(
@@ -270,9 +274,14 @@ function onScanSuccess(decodedText) {
     const existingInstrument = instruments.find(i => i.serialNumber === decodedText);
     if (existingInstrument) {
         document.getElementById('person-name').value = existingInstrument.personName;
+        // Hide serial number input for existing instruments
+        document.getElementById('serial-number-group').style.display = 'none';
     } else {
         // Clear person name for new instrument
         document.getElementById('person-name').value = '';
+        // Show serial number input for new instruments
+        document.getElementById('serial-number-group').style.display = 'block';
+        document.getElementById('serial-number-input').value = '';
     }
     
     // Focus on the first empty field
@@ -331,8 +340,11 @@ function handleCheckInOut(status) {
         return;
     }
     
+    // Get the physical serial number if provided
+    const physicalSerialNumber = document.getElementById('serial-number-input').value;
+    
     // Save the instrument
-    addOrUpdateInstrument(serialNumber, instrumentType, personName, status);
+    addOrUpdateInstrument(serialNumber, instrumentType, personName, status, physicalSerialNumber);
     
     // Show success message
     const statusText = status === 'checked-out' ? 'checked out' : 'checked in';
@@ -570,6 +582,12 @@ function createInstrumentCard(instrument) {
                     <span class="detail-label">Time</span>
                     <span class="detail-value">${instrument.timestamp}</span>
                 </div>
+                ${instrument.physicalSerialNumber ? `
+                <div class="detail-row">
+                    <span class="detail-label">Physical Serial</span>
+                    <span class="detail-value">${instrument.physicalSerialNumber}</span>
+                </div>
+                ` : ''}
             </div>
         </div>
     `;
