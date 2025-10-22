@@ -214,7 +214,7 @@ body {
 /* Scan Guide Text Overlay */
 .scan-guide {
     position: absolute;
-    bottom: 200px;
+    bottom: 150px;
     left: 0;
     right: 0;
     display: flex;
@@ -719,41 +719,6 @@ body {
     padding: 0 20px;
     z-index: 999;
     pointer-events: none;
-}
-
-/* Progressive blur background - only on scan page */
-#scan-page .tab-bar-container::before {
-    content: '';
-    position: fixed;
-    bottom: 0;
-    left: 0;
-    right: 0;
-    height: 200px;
-    background: linear-gradient(to top, 
-        rgba(0, 0, 0, 0.15) 0%,
-        rgba(0, 0, 0, 0.08) 30%,
-        transparent 100%);
-    backdrop-filter: blur(20px);
-    -webkit-backdrop-filter: blur(20px);
-    mask-image: linear-gradient(to top,
-        black 0%,
-        black 40%,
-        transparent 100%);
-    -webkit-mask-image: linear-gradient(to top,
-        black 0%,
-        black 40%,
-        transparent 100%);
-    pointer-events: none;
-    z-index: -1;
-}
-
-@media (prefers-color-scheme: dark) {
-    #scan-page .tab-bar-container::before {
-        background: linear-gradient(to top, 
-            rgba(0, 0, 0, 0.3) 0%,
-            rgba(0, 0, 0, 0.15) 30%,
-            transparent 100%);
-    }
 }
 
 /* Pill shape for Scan and Inventory */
