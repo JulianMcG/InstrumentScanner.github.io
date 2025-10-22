@@ -214,12 +214,15 @@ function startScanning() {
     html5QrCode = new Html5Qrcode("reader");
     
     const config = {
-        fps: 10,
+        fps: 30, // Increased FPS for faster scanning
         qrbox: { width: 250, height: 250 },
         aspectRatio: 1.0,
         disableFlip: false,
         rememberLastUsedCamera: true,
-        showTorchButtonIfSupported: false
+        showTorchButtonIfSupported: false,
+        experimentalFeatures: {
+            useBarCodeDetectorIfSupported: true // Use native barcode detection for better accuracy
+        }
     };
     
     html5QrCode.start(
