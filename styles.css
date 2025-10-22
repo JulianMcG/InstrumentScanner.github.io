@@ -142,47 +142,57 @@ body {
     box-shadow: none !important;
 }
 
-/* Customize the scanning region overlay */
+/* Remove ALL scanner overlays, borders, and darkening */
 #reader__scan_region {
     border: none !important;
+    background: transparent !important;
 }
 
 #reader__scan_region video {
     border-radius: 0 !important;
 }
 
-/* Style the QR box frame with rounded corners */
 #reader__scan_region img {
     display: none !important;
 }
 
-/* Override the shaded area - make it fully transparent with NO darkening */
-#reader > div > div {
-    background: transparent !important;
-    box-shadow: none !important;
-}
-
-#reader__scan_region {
-    background: transparent !important;
+#reader__scan_region canvas {
+    display: none !important;
 }
 
 #reader__scan_region > div {
     background: transparent !important;
+    border: none !important;
+    box-shadow: none !important;
 }
 
 #reader__scan_region > div:first-child {
-    border: 3px solid rgba(255, 255, 255, 0.9) !important;
-    border-radius: 24px !important;
+    border: none !important;
     box-shadow: none !important;
     background: transparent !important;
 }
 
-/* Remove ALL overlays and shadows */
+#reader > div > div {
+    background: transparent !important;
+    box-shadow: none !important;
+    border: none !important;
+}
+
 #reader canvas {
     display: none !important;
 }
 
 #reader > div {
+    background: transparent !important;
+    border: none !important;
+}
+
+/* Hide all possible overlays */
+#reader__scan_region__overlay {
+    display: none !important;
+}
+
+#reader div[style*="background"] {
     background: transparent !important;
 }
 
@@ -707,48 +717,68 @@ body {
 
 .tab-bar-container {
     position: fixed;
-    bottom: max(20px, env(safe-area-inset-bottom) + 10px);
+    bottom: 20px;
     left: 0;
     right: 0;
     display: flex;
     justify-content: space-between;
     align-items: flex-end;
-    padding: 0 20px;
+    padding: 0 20px 20px 20px;
+    padding-bottom: max(20px, env(safe-area-inset-bottom));
     z-index: 999;
     pointer-events: none;
 }
 
-/* Pill shape for Scan and Inventory */
+/* Glassmorphism effect for pill */
 .tab-bar-pill {
     display: flex;
-    background: var(--tab-bar-bg);
-    backdrop-filter: saturate(180%) blur(20px);
-    -webkit-backdrop-filter: saturate(180%) blur(20px);
+    background: rgba(255, 255, 255, 0.7);
+    backdrop-filter: blur(10px) saturate(180%);
+    -webkit-backdrop-filter: blur(10px) saturate(180%);
     border-radius: 100px;
-    padding: 6px;
-    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+    padding: 8px;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1),
+                inset 0 1px 0 rgba(255, 255, 255, 0.8);
+    border: 1px solid rgba(255, 255, 255, 0.3);
     pointer-events: auto;
     position: relative;
+    min-width: 200px;
 }
 
-/* Sliding selection indicator */
+@media (prefers-color-scheme: dark) {
+    .tab-bar-pill {
+        background: rgba(28, 28, 30, 0.7);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3),
+                    inset 0 1px 0 rgba(255, 255, 255, 0.1);
+    }
+}
+
+/* Sliding selection indicator with glassmorphism */
 .tab-bar-pill::before {
     content: '';
     position: absolute;
-    top: 6px;
-    left: 6px;
-    width: calc(50% - 6px);
-    height: calc(100% - 12px);
+    top: 8px;
+    left: 8px;
+    width: calc(50% - 8px);
+    height: calc(100% - 16px);
     background: rgba(255, 255, 255, 0.95);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
     border-radius: 100px;
     z-index: 0;
     transition: transform 0.3s ease, opacity 0.3s ease;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.12);
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1),
+                inset 0 1px 0 rgba(255, 255, 255, 1);
+    border: 1px solid rgba(255, 255, 255, 0.8);
 }
 
 @media (prefers-color-scheme: dark) {
     .tab-bar-pill::before {
-        background: rgba(255, 255, 255, 0.15);
+        background: rgba(255, 255, 255, 0.2);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3),
+                    inset 0 1px 0 rgba(255, 255, 255, 0.2);
     }
 }
 
@@ -805,25 +835,35 @@ body {
     letter-spacing: 0.2px;
 }
 
-/* Circle shape for Search - matches pill style */
+/* Circle shape for Search - glassmorphism style */
 .tab-btn-circle {
     width: 56px;
     height: 56px;
     border-radius: 50%;
-    background: var(--tab-bar-bg);
-    backdrop-filter: saturate(180%) blur(20px);
-    -webkit-backdrop-filter: saturate(180%) blur(20px);
-    border: none;
+    background: rgba(255, 255, 255, 0.7);
+    backdrop-filter: blur(10px) saturate(180%);
+    -webkit-backdrop-filter: blur(10px) saturate(180%);
+    border: 1px solid rgba(255, 255, 255, 0.3);
     display: flex;
     align-items: center;
     justify-content: center;
     cursor: pointer;
     color: var(--ios-gray);
-    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1),
+                inset 0 1px 0 rgba(255, 255, 255, 0.8);
     transition: all 0.2s ease;
     pointer-events: auto;
     font-family: -apple-system, BlinkMacSystemFont, sans-serif;
     position: relative;
+}
+
+@media (prefers-color-scheme: dark) {
+    .tab-btn-circle {
+        background: rgba(28, 28, 30, 0.7);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3),
+                    inset 0 1px 0 rgba(255, 255, 255, 0.1);
+    }
 }
 
 /* Selection indicator for circle - never shown */
