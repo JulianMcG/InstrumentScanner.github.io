@@ -108,9 +108,11 @@ function initTabNavigation() {
             // Handle camera based on page
             if (targetPage === 'scan-page') {
                 // Restart camera when returning to scan page
-                if (!isScanning) {
-                    setTimeout(() => startScanning(), 100);
-                }
+                setTimeout(() => {
+                    if (!isScanning) {
+                        startScanning();
+                    }
+                }, 200);
             } else {
                 // Stop camera when leaving scan page
                 stopScanning();
@@ -161,9 +163,16 @@ function initScanPage() {
 }
 
 function startScanning() {
-    if (isScanning || html5QrCode) return;
+    // Prevent multiple scanner instances
+    if (isScanning || html5QrCode) {
+        console.log("Scanner already running or initializing");
+        return;
+    }
     
     const readerElement = document.getElementById('reader');
+    
+    // Clear any existing content
+    readerElement.innerHTML = '';
     
     // Make reader visible
     readerElement.style.display = 'block';
@@ -258,12 +267,16 @@ function resumeScanning() {
 }
 
 function stopScanning() {
-    if (html5QrCode) {
+    if (html5QrCode && isScanning) {
         html5QrCode.stop().then(() => {
+            html5QrCode.clear();
             html5QrCode = null;
             isScanning = false;
+            document.getElementById('reader').style.display = 'none';
         }).catch(err => {
             console.error("Error stopping scanner", err);
+            html5QrCode = null;
+            isScanning = false;
         });
     }
 }
