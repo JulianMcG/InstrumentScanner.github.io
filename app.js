@@ -203,81 +203,37 @@ function startScanning() {
     }
     
     const readerElement = document.getElementById('reader');
-    console.log("Reader element found:", readerElement);
     
     // Clear any existing content
     readerElement.innerHTML = '';
     
     // Make reader visible
     readerElement.style.display = 'block';
-    console.log("Reader element display set to block");
     
     // Initialize scanner
     html5QrCode = new Html5Qrcode("reader");
-    console.log("Html5Qrcode instance created");
     
     const config = {
         fps: 10,
-        qrbox: 0, // Remove scanning box overlay for full screen
+        qrbox: { width: 250, height: 250 },
         aspectRatio: 1.0,
         disableFlip: false,
         rememberLastUsedCamera: true,
-        showTorchButtonIfSupported: false,
-        supportedScanTypes: [
-            Html5QrcodeScanType.SCAN_TYPE_CAMERA
-        ],
-        formatsToSupport: [
-            Html5QrcodeSupportedFormats.CODE_128,
-            Html5QrcodeSupportedFormats.CODE_39,
-            Html5QrcodeSupportedFormats.EAN_13,
-            Html5QrcodeSupportedFormats.EAN_8,
-            Html5QrcodeSupportedFormats.UPC_A,
-            Html5QrcodeSupportedFormats.UPC_E
-        ]
+        showTorchButtonIfSupported: false
     };
     
-    // Try to get available cameras first
-    Html5Qrcode.getCameras().then(cameras => {
-        console.log("Available cameras:", cameras);
-        
-        // Use the first available camera
-        const cameraId = cameras.length > 0 ? cameras[0].id : { facingMode: "environment" };
-        console.log("Using camera:", cameraId);
-        
-        return html5QrCode.start(
-            cameraId,
-            config,
-            onScanSuccess,
-            onScanError
-        );
-    }).then(() => {
+    html5QrCode.start(
+        { facingMode: "environment" },
+        config,
+        onScanSuccess,
+        onScanError
+    ).then(() => {
         isScanning = true;
         console.log("Scanner started successfully");
-        // Add visual indicator that scanner is running
-        const scanGuide = document.querySelector('.scan-guide-text');
-        if (scanGuide) {
-            scanGuide.textContent = "Scanner is running - point at barcode";
-        }
     }).catch(err => {
         console.error("Unable to start scanner", err);
-        // Try fallback with environment facing mode
-        html5QrCode.start(
-            { facingMode: "environment" },
-            config,
-            onScanSuccess,
-            onScanError
-        ).then(() => {
-            isScanning = true;
-            console.log("Scanner started with fallback camera");
-            // Add visual indicator that scanner is running
-            const scanGuide = document.querySelector('.scan-guide-text');
-            if (scanGuide) {
-                scanGuide.textContent = "Scanner is running - point at barcode";
-            }
-        }).catch(fallbackErr => {
-            console.error("Fallback camera also failed", fallbackErr);
-            isScanning = false;
-        });
+        // Let the browser handle camera permissions natively
+        isScanning = false;
     });
 }
 
