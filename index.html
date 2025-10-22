@@ -1,555 +1,175 @@
-// ========================================
-// Instrument Scanner App - iOS Native Style
-// ========================================
-
-// State
-let html5QrCode = null;
-let currentScannedCode = null;
-let instruments = [];
-let isScanning = false;
-
-// ========================================
-// Initialize App
-// ========================================
-document.addEventListener('DOMContentLoaded', () => {
-    loadInstruments();
-    initTabNavigation();
-    initScanPage();
-    initInventoryPage();
-    initSearchPage();
-    updateStats();
-    renderInventory();
-    
-    // Auto-start camera on load
-    setTimeout(() => {
-        startScanning();
-    }, 100);
-});
-
-// ========================================
-// Data Management
-// ========================================
-function loadInstruments() {
-    const stored = localStorage.getItem('instruments');
-    if (stored) {
-        instruments = JSON.parse(stored);
-    }
-}
-
-function saveInstruments() {
-    localStorage.setItem('instruments', JSON.stringify(instruments));
-}
-
-function addOrUpdateInstrument(serialNumber, instrumentType, personName, status) {
-    const timestamp = new Date().toLocaleString();
-    
-    // Check if instrument already exists
-    const existingIndex = instruments.findIndex(i => i.serialNumber === serialNumber);
-    
-    if (existingIndex !== -1) {
-        // Update existing instrument
-        instruments[existingIndex] = {
-            ...instruments[existingIndex],
-            personName,
-            status,
-            timestamp,
-            instrumentType
-        };
-    } else {
-        // Add new instrument
-        instruments.push({
-            serialNumber,
-            instrumentType,
-            personName,
-            status,
-            timestamp,
-            id: Date.now()
-        });
-    }
-    
-    saveInstruments();
-    updateStats();
-    renderInventory();
-}
-
-// ========================================
-// Tab Navigation
-// ========================================
-function initTabNavigation() {
-    const tabButtons = document.querySelectorAll('.tab-btn');
-    const circleButton = document.querySelector('.tab-btn-circle');
-    const pillContainer = document.querySelector('.tab-bar-pill');
-    
-    // Handle pill tab buttons
-    tabButtons.forEach(btn => {
-        btn.addEventListener('click', () => {
-            const targetPage = btn.dataset.page;
-            
-            // Update active states
-            document.querySelectorAll('.page').forEach(page => {
-                page.classList.remove('active');
-            });
-            document.querySelectorAll('.tab-btn').forEach(tab => {
-                tab.classList.remove('active');
-            });
-            circleButton.classList.remove('active');
-            
-            // Activate target
-            document.getElementById(targetPage).classList.add('active');
-            btn.classList.add('active');
-            
-            // Update pill container data attribute for sliding animation
-            if (targetPage === 'inventory-page') {
-                pillContainer.setAttribute('data-active', 'inventory');
-            } else {
-                pillContainer.setAttribute('data-active', 'scan');
-            }
-            
-            // Handle camera based on page
-            if (targetPage === 'scan-page') {
-                // Restart camera when returning to scan page
-                setTimeout(() => {
-                    if (!isScanning) {
-                        startScanning();
-                    }
-                }, 200);
-            } else {
-                // Stop camera when leaving scan page
-                stopScanning();
-            }
-            
-            // If switching to inventory, refresh it
-            if (targetPage === 'inventory-page') {
-                renderInventory();
-            }
-        });
-    });
-    
-    // Handle circle button
-    circleButton.addEventListener('click', () => {
-        const targetPage = circleButton.dataset.page;
-        
-        // Update active states
-        document.querySelectorAll('.page').forEach(page => {
-            page.classList.remove('active');
-        });
-        document.querySelectorAll('.tab-btn').forEach(tab => {
-            tab.classList.remove('active');
-        });
-        
-        // Activate target
-        document.getElementById(targetPage).classList.add('active');
-        circleButton.classList.add('active');
-        
-        // Hide pill indicator when search is active
-        pillContainer.setAttribute('data-active', 'search');
-        
-        // Stop camera when leaving scan page
-        stopScanning();
-    });
-}
-
-// ========================================
-// Scan Page
-// ========================================
-function initScanPage() {
-    const checkOutBtn = document.getElementById('check-out-btn');
-    const checkInBtn = document.getElementById('check-in-btn');
-    const cancelBtn = document.getElementById('cancel-btn');
-    
-    checkOutBtn.addEventListener('click', () => handleCheckInOut('checked-out'));
-    checkInBtn.addEventListener('click', () => handleCheckInOut('checked-in'));
-    cancelBtn.addEventListener('click', resetScanForm);
-}
-
-function startScanning() {
-    // Prevent multiple scanner instances
-    if (isScanning || html5QrCode) {
-        console.log("Scanner already running or initializing");
-        return;
-    }
-    
-    const readerElement = document.getElementById('reader');
-    
-    // Clear any existing content
-    readerElement.innerHTML = '';
-    
-    // Make reader visible
-    readerElement.style.display = 'block';
-    
-    // Initialize scanner
-    html5QrCode = new Html5Qrcode("reader");
-    
-    const config = {
-        fps: 10,
-        qrbox: 0,  // No box overlay at all
-        aspectRatio: 1.0,
-        disableFlip: false,
-        formatsToSupport: [
-            Html5QrcodeSupportedFormats.QR_CODE,
-            Html5QrcodeSupportedFormats.CODE_128,
-            Html5QrcodeSupportedFormats.CODE_39,
-            Html5QrcodeSupportedFormats.EAN_13,
-            Html5QrcodeSupportedFormats.EAN_8,
-            Html5QrcodeSupportedFormats.UPC_A,
-            Html5QrcodeSupportedFormats.UPC_E
-        ]
-    };
-    
-    html5QrCode.start(
-        { facingMode: "environment" },
-        config,
-        onScanSuccess,
-        onScanError
-    ).then(() => {
-        isScanning = true;
-    }).catch(err => {
-        console.error("Unable to start scanner", err);
-        // Show a non-intrusive error
-        showMessage("Camera access needed. Please allow camera permissions in Safari settings.", false);
-        isScanning = false;
-    });
-}
-
-function onScanSuccess(decodedText) {
-    // Vibrate on successful scan (if supported)
-    if (navigator.vibrate) {
-        navigator.vibrate(100);
-    }
-    
-    // Stop scanning temporarily
-    pauseScanning();
-    
-    // Store the scanned code
-    currentScannedCode = decodedText;
-    
-    // Hide scan guide
-    const scanGuide = document.querySelector('.scan-guide');
-    if (scanGuide) scanGuide.style.display = 'none';
-    
-    // Show the form
-    document.getElementById('serial-number').value = decodedText;
-    document.getElementById('scan-form').classList.remove('hidden');
-    
-    // Try to auto-fill if instrument exists
-    const existingInstrument = instruments.find(i => i.serialNumber === decodedText);
-    if (existingInstrument) {
-        document.getElementById('instrument-type').value = existingInstrument.instrumentType;
-        document.getElementById('person-name').value = existingInstrument.personName;
-    } else {
-        // Clear form for new instrument
-        document.getElementById('instrument-type').value = '';
-        document.getElementById('person-name').value = '';
-    }
-    
-    // Focus on the first empty field
-    if (!existingInstrument) {
-        document.getElementById('instrument-type').focus();
-    } else {
-        document.getElementById('person-name').focus();
-    }
-}
-
-function onScanError(errorMessage) {
-    // Ignore scan errors (they happen constantly while scanning)
-}
-
-function pauseScanning() {
-    if (html5QrCode && isScanning) {
-        html5QrCode.pause(true);
-    }
-}
-
-function resumeScanning() {
-    if (html5QrCode && isScanning) {
-        html5QrCode.resume();
-    }
-}
-
-function stopScanning() {
-    if (html5QrCode && isScanning) {
-        html5QrCode.stop().then(() => {
-            html5QrCode.clear();
-            html5QrCode = null;
-            isScanning = false;
-            document.getElementById('reader').style.display = 'none';
-        }).catch(err => {
-            console.error("Error stopping scanner", err);
-            html5QrCode = null;
-            isScanning = false;
-        });
-    }
-}
-
-function handleCheckInOut(status) {
-    const serialNumber = document.getElementById('serial-number').value;
-    const instrumentType = document.getElementById('instrument-type').value;
-    const personName = document.getElementById('person-name').value;
-    
-    // Validate
-    if (!instrumentType) {
-        showMessage('Please select an instrument type', false);
-        return;
-    }
-    
-    if (!personName) {
-        showMessage('Please enter a student name', false);
-        return;
-    }
-    
-    // Save the instrument
-    addOrUpdateInstrument(serialNumber, instrumentType, personName, status);
-    
-    // Show success message
-    const statusText = status === 'checked-out' ? 'checked out' : 'checked in';
-    const successText = `${instrumentType} ${statusText} to ${personName}`;
-    showMessage(successText, true);
-    
-    // Hide form and resume scanning
-    document.getElementById('scan-form').classList.add('hidden');
-    
-    // Show scan guide again
-    const scanGuide = document.querySelector('.scan-guide');
-    if (scanGuide) scanGuide.style.display = 'flex';
-    
-    // Reset after 1.5 seconds and resume scanning
-    setTimeout(() => {
-        hideMessage();
-        resumeScanning();
-    }, 1500);
-    
-    currentScannedCode = null;
-}
-
-function resetScanForm() {
-    document.getElementById('scan-form').classList.add('hidden');
-    document.getElementById('serial-number').value = '';
-    document.getElementById('instrument-type').value = '';
-    document.getElementById('person-name').value = '';
-    currentScannedCode = null;
-    
-    // Show scan guide again
-    const scanGuide = document.querySelector('.scan-guide');
-    if (scanGuide) scanGuide.style.display = 'flex';
-    
-    // Resume scanning
-    resumeScanning();
-}
-
-function showMessage(text, isSuccess) {
-    const messageEl = document.getElementById('success-message');
-    const textEl = document.getElementById('success-text');
-    textEl.textContent = text;
-    messageEl.classList.remove('hidden');
-    if (!isSuccess) {
-        messageEl.style.color = '#FF3B30'; // iOS red for errors
-    } else {
-        messageEl.style.color = '#34C759'; // iOS green for success
-    }
-}
-
-function hideMessage() {
-    document.getElementById('success-message').classList.add('hidden');
-}
-
-// ========================================
-// Inventory Page
-// ========================================
-function initInventoryPage() {
-    const filterButtons = document.querySelectorAll('.filter-btn');
-    
-    filterButtons.forEach(btn => {
-        btn.addEventListener('click', () => {
-            // Update active state
-            filterButtons.forEach(b => b.classList.remove('active'));
-            btn.classList.add('active');
-            
-            // Apply filter
-            const filter = btn.dataset.filter;
-            renderInventory(filter);
-        });
-    });
-}
-
-function initSearchPage() {
-    const searchInput = document.getElementById('search-input');
-    const clearSearchBtn = document.getElementById('clear-search');
-    
-    // Search functionality
-    searchInput.addEventListener('input', (e) => {
-        const searchTerm = e.target.value;
-        
-        // Show/hide clear button
-        if (searchTerm) {
-            clearSearchBtn.classList.remove('hidden');
-        } else {
-            clearSearchBtn.classList.add('hidden');
-        }
-        
-        renderSearchResults(searchTerm);
-    });
-    
-    clearSearchBtn.addEventListener('click', () => {
-        searchInput.value = '';
-        clearSearchBtn.classList.add('hidden');
-        renderSearchResults('');
-        searchInput.focus();
-    });
-}
-
-function renderInventory(filter = 'all') {
-    const inventoryList = document.getElementById('inventory-list');
-    const emptyState = document.getElementById('empty-state');
-    
-    // Filter instruments by status
-    let filteredInstruments = instruments;
-    if (filter === 'checked-out') {
-        filteredInstruments = instruments.filter(i => i.status === 'checked-out');
-    } else if (filter === 'checked-in') {
-        filteredInstruments = instruments.filter(i => i.status === 'checked-in');
-    }
-    
-    // Show/hide empty state
-    if (filteredInstruments.length === 0) {
-        inventoryList.innerHTML = '';
-        emptyState.classList.remove('hidden');
-        document.querySelector('#empty-state p:first-of-type').textContent = 'No instruments yet';
-        document.querySelector('#empty-state p:last-of-type').textContent = 'Start by scanning an instrument';
-        return;
-    }
-    
-    emptyState.classList.add('hidden');
-    
-    // Group by instrument type
-    const grouped = {};
-    filteredInstruments.forEach(instrument => {
-        const type = instrument.instrumentType;
-        if (!grouped[type]) {
-            grouped[type] = [];
-        }
-        grouped[type].push(instrument);
-    });
-    
-    // Render grouped instruments
-    let html = '';
-    const sortedTypes = Object.keys(grouped).sort();
-    
-    sortedTypes.forEach(type => {
-        html += `<div class="category-header">${type}s</div>`;
-        
-        // Sort by timestamp (newest first)
-        grouped[type].sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
-        
-        grouped[type].forEach(instrument => {
-            html += createInstrumentCard(instrument);
-        });
-    });
-    
-    inventoryList.innerHTML = html;
-}
-
-function renderSearchResults(searchTerm = '') {
-    const searchResults = document.getElementById('search-results');
-    const emptyState = document.getElementById('search-empty-state');
-    
-    // If no search term, show empty state
-    if (!searchTerm) {
-        searchResults.innerHTML = '';
-        emptyState.classList.remove('hidden');
-        document.querySelector('#search-empty-state p:first-of-type').textContent = 'Search for instruments';
-        document.querySelector('#search-empty-state p:last-of-type').textContent = 'Enter a name, serial number, or instrument type';
-        return;
-    }
-    
-    // Filter by search term
-    const searchLower = searchTerm.toLowerCase();
-    const filteredInstruments = instruments.filter(i => {
-        return i.instrumentType.toLowerCase().includes(searchLower) ||
-               i.personName.toLowerCase().includes(searchLower) ||
-               i.serialNumber.toLowerCase().includes(searchLower);
-    });
-    
-    // Show/hide empty state
-    if (filteredInstruments.length === 0) {
-        searchResults.innerHTML = '';
-        emptyState.classList.remove('hidden');
-        document.querySelector('#search-empty-state p:first-of-type').textContent = 'No results found';
-        document.querySelector('#search-empty-state p:last-of-type').textContent = 'Try a different search term';
-        return;
-    }
-    
-    emptyState.classList.add('hidden');
-    
-    // Group by instrument type
-    const grouped = {};
-    filteredInstruments.forEach(instrument => {
-        const type = instrument.instrumentType;
-        if (!grouped[type]) {
-            grouped[type] = [];
-        }
-        grouped[type].push(instrument);
-    });
-    
-    // Render grouped instruments
-    let html = '';
-    const sortedTypes = Object.keys(grouped).sort();
-    
-    sortedTypes.forEach(type => {
-        html += `<div class="category-header">${type}s</div>`;
-        
-        // Sort by timestamp (newest first)
-        grouped[type].sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
-        
-        grouped[type].forEach(instrument => {
-            html += createInstrumentCard(instrument);
-        });
-    });
-    
-    searchResults.innerHTML = html;
-}
-
-function createInstrumentCard(instrument) {
-    const statusClass = instrument.status === 'checked-out' ? 'checked-out' : 'checked-in';
-    const statusText = instrument.status === 'checked-out' ? 'Checked Out' : 'Available';
-    
-    return `
-        <div class="instrument-card">
-            <div class="instrument-header">
-                <div>
-                    <div class="instrument-title">${instrument.instrumentType}</div>
-                    <div class="instrument-type">Serial: ${instrument.serialNumber}</div>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <meta name="apple-mobile-web-app-title" content="Instrument Scanner">
+    <meta name="theme-color" content="#007AFF">
+    <title>Instrument Scanner</title>
+    <link rel="manifest" href="manifest.json">
+    <link rel="apple-touch-icon" href="icon-192.png">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" />
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <!-- Scan Page -->
+    <div id="scan-page" class="page active">
+        <!-- Full screen scanner - no header -->
+        <div class="content full-screen">
+            <!-- Scanner Container -->
+            <div id="scanner-container" class="scanner-container full-screen">
+                <div id="reader"></div>
+                <div class="scan-guide">
+                    <div class="scan-guide-text">Position barcode within frame</div>
                 </div>
-                <span class="status-badge ${statusClass}">${statusText}</span>
             </div>
-            <div class="instrument-details">
-                <div class="detail-row">
-                    <span class="detail-label">Student</span>
-                    <span class="detail-value">${instrument.personName}</span>
+
+            <!-- Form (shown after successful scan) -->
+            <div id="scan-form" class="scan-form hidden">
+                <div class="form-group">
+                    <label for="serial-number">Serial Number</label>
+                    <input type="text" id="serial-number" readonly>
                 </div>
-                <div class="detail-row">
-                    <span class="detail-label">Time</span>
-                    <span class="detail-value">${instrument.timestamp}</span>
+
+                <div class="form-group">
+                    <label for="instrument-type">Instrument Type</label>
+                    <select id="instrument-type" required>
+                        <option value="">Select Type</option>
+                        <option value="Trumpet">Trumpet</option>
+                        <option value="Trombone">Trombone</option>
+                        <option value="Clarinet">Clarinet</option>
+                        <option value="Flute">Flute</option>
+                        <option value="Saxophone">Saxophone</option>
+                        <option value="French Horn">French Horn</option>
+                        <option value="Tuba">Tuba</option>
+                        <option value="Drum">Drum</option>
+                        <option value="Percussion">Percussion</option>
+                        <option value="Other">Other</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="person-name">Student Name</label>
+                    <input type="text" id="person-name" placeholder="Enter student name" required>
+                </div>
+
+                <div class="button-group">
+                    <button id="check-out-btn" class="btn btn-success">
+                        <span class="material-symbols-rounded">check_circle</span>
+                        Check Out
+                    </button>
+                    <button id="check-in-btn" class="btn btn-warning">
+                        <span class="material-symbols-rounded">assignment_return</span>
+                        Check In
+                    </button>
+                </div>
+
+                <button id="cancel-btn" class="btn btn-secondary">
+                    <span class="material-symbols-rounded">close</span>
+                    Cancel
+                </button>
+            </div>
+
+            <!-- Success Message -->
+            <div id="success-message" class="message success hidden">
+                <p id="success-text"></p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Inventory Page -->
+    <div id="inventory-page" class="page">
+        <div class="header">
+            <h1>Inventory</h1>
+            <div class="stats">
+                <div class="stat stat-out">
+                    <span class="material-symbols-rounded stat-icon">output</span>
+                    <div class="stat-content">
+                        <span class="stat-value" id="checked-out-count">0</span>
+                        <span class="stat-label">Checked Out</span>
+                    </div>
+                </div>
+                <div class="stat stat-in">
+                    <span class="material-symbols-rounded stat-icon">inventory_2</span>
+                    <div class="stat-content">
+                        <span class="stat-value" id="checked-in-count">0</span>
+                        <span class="stat-label">Available</span>
+                    </div>
                 </div>
             </div>
         </div>
-    `;
-}
+        
+        <div class="content">
+            <div class="filter-buttons">
+                <button class="filter-btn active" data-filter="all">All</button>
+                <button class="filter-btn" data-filter="checked-out">Checked Out</button>
+                <button class="filter-btn" data-filter="checked-in">Available</button>
+            </div>
 
-function updateStats() {
-    const checkedOut = instruments.filter(i => i.status === 'checked-out').length;
-    const checkedIn = instruments.filter(i => i.status === 'checked-in').length;
-    
-    document.getElementById('checked-out-count').textContent = checkedOut;
-    document.getElementById('checked-in-count').textContent = checkedIn;
-}
+            <div id="inventory-list" class="inventory-list">
+                <!-- Instruments will be dynamically added here -->
+            </div>
 
-// ========================================
-// Service Worker Registration
-// ========================================
-if ('serviceWorker' in navigator) {
-    window.addEventListener('load', () => {
-        navigator.serviceWorker.register('service-worker.js')
-            .then(reg => console.log('Service Worker registered'))
-            .catch(err => console.log('Service Worker registration failed'));
-    });
-}
+            <div id="empty-state" class="empty-state">
+                <span class="material-symbols-rounded empty-icon">inventory_2</span>
+                <p>No instruments yet</p>
+                <p>Start by scanning an instrument</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Search Page -->
+    <div id="search-page" class="page">
+        <div class="header">
+            <h1>Search</h1>
+        </div>
+        
+        <div class="content">
+            <div class="search-container">
+                <span class="material-symbols-rounded search-icon">search</span>
+                <input type="text" id="search-input" class="search-input" placeholder="Search instruments or students">
+                <button id="clear-search" class="clear-search hidden">
+                    <span class="material-symbols-rounded">close</span>
+                </button>
+            </div>
+
+            <div id="search-results" class="inventory-list">
+                <!-- Search results will be dynamically added here -->
+            </div>
+
+            <div id="search-empty-state" class="empty-state">
+                <span class="material-symbols-rounded empty-icon">search</span>
+                <p>Search for instruments</p>
+                <p>Enter a name, serial number, or instrument type</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bottom Tab Bar - Floating Design -->
+    <div class="tab-bar-container">
+        <!-- Pill shape with Scan and Inventory -->
+        <div class="tab-bar-pill" data-active="scan">
+            <button class="tab-btn active" data-page="scan-page">
+                <span class="material-symbols-rounded tab-icon">qr_code_scanner</span>
+                <span class="tab-label">Scan</span>
+            </button>
+            <button class="tab-btn" data-page="inventory-page">
+                <span class="material-symbols-rounded tab-icon">inventory_2</span>
+                <span class="tab-label">Inventory</span>
+            </button>
+        </div>
+        
+        <!-- Circle shape with Search -->
+        <button class="tab-btn-circle" data-page="search-page">
+            <span class="material-symbols-rounded">search</span>
+        </button>
+    </div>
+
+    <!-- Include html5-qrcode library for barcode scanning -->
+    <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
+    <script src="app.js"></script>
+</body>
+</html>
+
