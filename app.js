@@ -17,6 +17,7 @@ document.addEventListener('DOMContentLoaded', () => {
     initScanPage();
     initInventoryPage();
     initSearchPage();
+    initHamburgerMenus();
     updateStats();
     renderInventory();
     
@@ -42,6 +43,16 @@ function saveInstruments() {
 
 function addOrUpdateInstrument(serialNumber, instrumentType, personName, status) {
     const timestamp = new Date().toLocaleString();
+    
+    // Add school identifier if not present
+    if (!serialNumber.includes('-MHSN')) {
+        serialNumber = serialNumber + '-MHSN';
+    }
+    
+    // Auto-detect instrument type based on barcode number
+    if (!instrumentType) {
+        instrumentType = detectInstrumentType(serialNumber);
+    }
     
     // Check if instrument already exists
     const existingIndex = instruments.findIndex(i => i.serialNumber === serialNumber);
@@ -70,6 +81,28 @@ function addOrUpdateInstrument(serialNumber, instrumentType, personName, status)
     saveInstruments();
     updateStats();
     renderInventory();
+}
+
+function detectInstrumentType(serialNumber) {
+    // Remove school identifier for detection
+    const cleanNumber = serialNumber.replace('-MHSN', '');
+    const num = parseInt(cleanNumber);
+    
+    // Instrument type detection based on hundreds digit
+    const hundreds = Math.floor(num / 100);
+    
+    switch (hundreds) {
+        case 1: return 'Flute';           // 100-199
+        case 2: return 'Clarinet';        // 200-299
+        case 3: return 'Saxophone';       // 300-399
+        case 4: return 'Trumpet';         // 400-499
+        case 5: return 'Trombone';        // 500-599
+        case 6: return 'French Horn';      // 600-699
+        case 7: return 'Tuba';            // 700-799
+        case 8: return 'Drum';            // 800-899
+        case 9: return 'Percussion';      // 900-999
+        default: return 'Other';
+    }
 }
 
 // ========================================
@@ -182,17 +215,16 @@ function startScanning() {
     
     const config = {
         fps: 10,
-        qrbox: 0,  // No box overlay at all
+        qrbox: 0, // Remove scanning box overlay for full screen
         aspectRatio: 1.0,
         disableFlip: false,
+        rememberLastUsedCamera: true,
+        showTorchButtonIfSupported: false,
+        supportedScanTypes: [
+            Html5QrcodeScanType.SCAN_TYPE_CAMERA
+        ],
         formatsToSupport: [
-            Html5QrcodeSupportedFormats.QR_CODE,
-            Html5QrcodeSupportedFormats.CODE_128,
-            Html5QrcodeSupportedFormats.CODE_39,
-            Html5QrcodeSupportedFormats.EAN_13,
-            Html5QrcodeSupportedFormats.EAN_8,
-            Html5QrcodeSupportedFormats.UPC_A,
-            Html5QrcodeSupportedFormats.UPC_E
+            Html5QrcodeSupportedFormats.CODE_128
         ]
     };
     
@@ -203,15 +235,17 @@ function startScanning() {
         onScanError
     ).then(() => {
         isScanning = true;
+        console.log("Scanner started successfully");
     }).catch(err => {
         console.error("Unable to start scanner", err);
-        // Show a non-intrusive error
-        showMessage("Camera access needed. Please allow camera permissions in Safari settings.", false);
+        // Let the browser handle camera permissions natively
         isScanning = false;
     });
 }
 
 function onScanSuccess(decodedText) {
+    console.log("Barcode scanned successfully:", decodedText);
+    
     // Vibrate on successful scan (if supported)
     if (navigator.vibrate) {
         navigator.vibrate(100);
@@ -231,14 +265,16 @@ function onScanSuccess(decodedText) {
     document.getElementById('serial-number').value = decodedText;
     document.getElementById('scan-form').classList.remove('hidden');
     
-    // Try to auto-fill if instrument exists
+    // Auto-detect instrument type based on barcode
+    const detectedType = detectInstrumentType(decodedText);
+    document.getElementById('instrument-type').value = detectedType;
+    
+    // Try to auto-fill person name if instrument exists
     const existingInstrument = instruments.find(i => i.serialNumber === decodedText);
     if (existingInstrument) {
-        document.getElementById('instrument-type').value = existingInstrument.instrumentType;
         document.getElementById('person-name').value = existingInstrument.personName;
     } else {
-        // Clear form for new instrument
-        document.getElementById('instrument-type').value = '';
+        // Clear person name for new instrument
         document.getElementById('person-name').value = '';
     }
     
@@ -471,7 +507,8 @@ function renderSearchResults(searchTerm = '') {
     const filteredInstruments = instruments.filter(i => {
         return i.instrumentType.toLowerCase().includes(searchLower) ||
                i.personName.toLowerCase().includes(searchLower) ||
-               i.serialNumber.toLowerCase().includes(searchLower);
+               i.serialNumber.toLowerCase().includes(searchLower) ||
+               i.timestamp.toLowerCase().includes(searchLower);
     });
     
     // Show/hide empty state
@@ -546,6 +583,94 @@ function updateStats() {
     
     document.getElementById('checked-out-count').textContent = checkedOut;
     document.getElementById('checked-in-count').textContent = checkedIn;
+}
+
+// ========================================
+// Hamburger Menu Functions
+// ========================================
+function initHamburgerMenus() {
+    const hamburgerMenus = document.querySelectorAll('.hamburger-menu');
+    const hamburgerOverlay = document.getElementById('hamburger-overlay');
+    const closeHamburger = document.getElementById('close-hamburger');
+    const manualEntryOption = document.getElementById('manual-entry-option');
+    const addInstrumentOption = document.getElementById('add-instrument-option');
+    
+    // Add click listeners to all hamburger menus
+    hamburgerMenus.forEach(menu => {
+        menu.addEventListener('click', () => {
+            hamburgerOverlay.classList.remove('hidden');
+        });
+    });
+    
+    closeHamburger.addEventListener('click', () => {
+        hamburgerOverlay.classList.add('hidden');
+    });
+    
+    hamburgerOverlay.addEventListener('click', (e) => {
+        if (e.target === hamburgerOverlay) {
+            hamburgerOverlay.classList.add('hidden');
+        }
+    });
+    
+    manualEntryOption.addEventListener('click', () => {
+        hamburgerOverlay.classList.add('hidden');
+        showManualEntryForm();
+    });
+    
+    addInstrumentOption.addEventListener('click', () => {
+        hamburgerOverlay.classList.add('hidden');
+        showAddInstrumentForm();
+    });
+}
+
+// ========================================
+// Manual Entry Functions
+// ========================================
+function showManualEntryForm() {
+    const serialNumber = prompt('Enter barcode manually:');
+    if (serialNumber && serialNumber.trim()) {
+        // Simulate a successful scan
+        currentScannedCode = serialNumber.trim();
+        
+        // Show the form
+        document.getElementById('serial-number').value = serialNumber.trim();
+        document.getElementById('scan-form').classList.remove('hidden');
+        
+        // Auto-detect instrument type based on barcode
+        const detectedType = detectInstrumentType(serialNumber.trim());
+        document.getElementById('instrument-type').value = detectedType;
+        
+        // Try to auto-fill person name if instrument exists
+        const existingInstrument = instruments.find(i => i.serialNumber === serialNumber.trim());
+        if (existingInstrument) {
+            document.getElementById('person-name').value = existingInstrument.personName;
+        } else {
+            // Clear person name for new instrument
+            document.getElementById('person-name').value = '';
+        }
+        
+        // Focus on the first empty field
+        if (!existingInstrument) {
+            document.getElementById('instrument-type').focus();
+        } else {
+            document.getElementById('person-name').focus();
+        }
+    }
+}
+
+function showAddInstrumentForm() {
+    const instrumentType = prompt('Enter instrument type:');
+    if (instrumentType && instrumentType.trim()) {
+        const serialNumber = prompt('Enter serial number:');
+        if (serialNumber && serialNumber.trim()) {
+            const personName = prompt('Enter student name:');
+            if (personName && personName.trim()) {
+                // Add as checked-in by default
+                addOrUpdateInstrument(serialNumber.trim(), instrumentType.trim(), personName.trim(), 'checked-in');
+                showMessage(`${instrumentType} added to inventory`, true);
+            }
+        }
+    }
 }
 
 // ========================================
