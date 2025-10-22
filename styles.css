@@ -172,7 +172,7 @@ body {
     box-shadow: 0 0 0 2px rgba(0, 0, 0, 0.3) !important;
 }
 
-/* Remove darkening overlays but keep scanning functionality */
+/* Remove ALL darkening overlays and scanning box overlays */
 #reader > div > div {
     background: transparent !important;
     box-shadow: none !important;
@@ -195,13 +195,28 @@ body {
     background: transparent !important;
 }
 
-/* Keep canvas for scanning but hide visual overlays */
+/* Hide ALL scanning overlays and darkening */
 #reader canvas {
-    opacity: 0 !important;
+    display: none !important;
 }
 
 #reader > div {
     background: transparent !important;
+}
+
+#reader * {
+    background: transparent !important;
+    box-shadow: none !important;
+    border: none !important;
+}
+
+/* Hide the scanning box overlay completely */
+#reader__scan_region > div {
+    display: none !important;
+}
+
+#reader__scan_region > div:first-child {
+    display: none !important;
 }
 
 /* Hide the default QR scanner UI elements */
@@ -269,7 +284,7 @@ body {
     padding-bottom: max(20px, env(safe-area-inset-bottom));
     box-shadow: 0 -8px 24px rgba(0, 0, 0, 0.15),
                 inset 0 1px 0 rgba(255, 255, 255, 0.15);
-    z-index: 1001;
+    z-index: 1002;
     animation: slideUp 0.3s ease;
     max-height: 70vh;
     overflow-y: auto;
@@ -748,7 +763,7 @@ body {
 
 .tab-bar-container {
     position: fixed;
-    bottom: max(10px, env(safe-area-inset-bottom) - 20px);
+    bottom: max(15px, env(safe-area-inset-bottom) - 15px);
     left: 0;
     right: 0;
     display: flex;
@@ -901,7 +916,7 @@ body {
 
 .hamburger-menu {
     position: fixed;
-    top: max(60px, env(safe-area-inset-top) + 20px);
+    top: max(10px, env(safe-area-inset-top) + 10px);
     right: 20px;
     width: 45px;
     height: 45px;
