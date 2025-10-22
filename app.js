@@ -619,23 +619,55 @@ function initHamburgerMenus() {
     });
     
     closeHamburger.addEventListener('click', () => {
-        hamburgerOverlay.classList.add('hidden');
+        const hamburgerContent = document.querySelector('.hamburger-content');
+        hamburgerContent.classList.add('closing');
+        hamburgerOverlay.classList.add('closing');
+        
+        setTimeout(() => {
+            hamburgerOverlay.classList.add('hidden');
+            hamburgerContent.classList.remove('closing');
+            hamburgerOverlay.classList.remove('closing');
+        }, 200);
     });
     
     hamburgerOverlay.addEventListener('click', (e) => {
         if (e.target === hamburgerOverlay) {
-            hamburgerOverlay.classList.add('hidden');
+            const hamburgerContent = document.querySelector('.hamburger-content');
+            hamburgerContent.classList.add('closing');
+            hamburgerOverlay.classList.add('closing');
+            
+            setTimeout(() => {
+                hamburgerOverlay.classList.add('hidden');
+                hamburgerContent.classList.remove('closing');
+                hamburgerOverlay.classList.remove('closing');
+            }, 300);
         }
     });
     
     manualEntryOption.addEventListener('click', () => {
-        hamburgerOverlay.classList.add('hidden');
-        showManualEntryForm();
+        const hamburgerContent = document.querySelector('.hamburger-content');
+        hamburgerContent.classList.add('closing');
+        hamburgerOverlay.classList.add('closing');
+        
+        setTimeout(() => {
+            hamburgerOverlay.classList.add('hidden');
+            hamburgerContent.classList.remove('closing');
+            hamburgerOverlay.classList.remove('closing');
+            showManualEntryForm();
+        }, 300);
     });
     
     addInstrumentOption.addEventListener('click', () => {
-        hamburgerOverlay.classList.add('hidden');
-        showAddInstrumentForm();
+        const hamburgerContent = document.querySelector('.hamburger-content');
+        hamburgerContent.classList.add('closing');
+        hamburgerOverlay.classList.add('closing');
+        
+        setTimeout(() => {
+            hamburgerOverlay.classList.add('hidden');
+            hamburgerContent.classList.remove('closing');
+            hamburgerOverlay.classList.remove('closing');
+            showAddInstrumentForm();
+        }, 300);
     });
 }
 
