@@ -156,7 +156,7 @@ body {
     display: none !important;
 }
 
-/* REMOVE ALL OVERLAYS, DARKENING, AND GUIDELINES - EVERYTHING! */
+/* Remove darkening overlays but keep scanning functionality */
 #reader > div > div {
     background: transparent !important;
     box-shadow: none !important;
@@ -179,19 +179,13 @@ body {
     background: transparent !important;
 }
 
-/* Remove ALL canvases, overlays and darkening layers */
+/* Keep canvas for scanning but hide visual overlays */
 #reader canvas {
-    display: none !important;
+    opacity: 0 !important;
 }
 
 #reader > div {
     background: transparent !important;
-}
-
-#reader * {
-    background: transparent !important;
-    box-shadow: none !important;
-    border: none !important;
 }
 
 /* Hide the default QR scanner UI elements */
