@@ -173,8 +173,11 @@ function startScanning() {
     
     const config = {
         fps: 10,
-        qrbox: { width: 250, height: 250 },
+        qrbox: 0, // No box at all
         aspectRatio: 1.0,
+        disableFlip: false,
+        rememberLastUsedCamera: true,
+        showTorchButtonIfSupported: false,
         formatsToSupport: [
             Html5QrcodeSupportedFormats.QR_CODE,
             Html5QrcodeSupportedFormats.CODE_128,
