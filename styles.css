@@ -960,9 +960,9 @@ body {
     left: 0;
     right: 0;
     bottom: 0;
-    background: rgba(0, 0, 0, 0.3);
-    backdrop-filter: blur(5px);
-    -webkit-backdrop-filter: blur(5px);
+    background: rgba(0, 0, 0, 0.4);
+    backdrop-filter: saturate(180%) blur(20px);
+    -webkit-backdrop-filter: saturate(180%) blur(20px);
     z-index: 1000;
     display: flex;
     align-items: center;
@@ -979,7 +979,7 @@ body {
     margin: 20px;
     max-width: 300px;
     width: 100%;
-    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15),
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3),
                 inset 0 1px 0 rgba(255, 255, 255, 0.15);
     border: 1px solid rgba(255, 255, 255, 0.1);
     animation: slideUp 0.3s ease;
@@ -991,7 +991,7 @@ body {
     align-items: center;
     margin-bottom: 20px;
     padding-bottom: 16px;
-    border-bottom: 0.5px solid var(--separator);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
 }
 
 .hamburger-header h2 {
@@ -1004,14 +1004,16 @@ body {
     width: 32px;
     height: 32px;
     border-radius: 50%;
-    background: var(--fill-tertiary);
-    border: none;
+    background: rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.1);
     display: flex;
     align-items: center;
     justify-content: center;
     cursor: pointer;
     color: var(--text-primary);
     transition: all 0.2s ease;
+    backdrop-filter: saturate(180%) blur(10px);
+    -webkit-backdrop-filter: saturate(180%) blur(10px);
 }
 
 .close-btn:active {
@@ -1033,8 +1035,8 @@ body {
     align-items: center;
     gap: 12px;
     padding: 12px 16px;
-    border: none;
-    background: transparent;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    background: rgba(255, 255, 255, 0.1);
     border-radius: 12px;
     cursor: pointer;
     color: var(--text-primary);
@@ -1043,10 +1045,13 @@ body {
     transition: all 0.2s ease;
     text-align: left;
     font-family: -apple-system, BlinkMacSystemFont, sans-serif;
+    backdrop-filter: saturate(180%) blur(10px);
+    -webkit-backdrop-filter: saturate(180%) blur(10px);
 }
 
 .hamburger-option:hover {
-    background: var(--fill-tertiary);
+    background: rgba(255, 255, 255, 0.2);
+    border-color: rgba(255, 255, 255, 0.2);
 }
 
 .hamburger-option:active {
