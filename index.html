@@ -18,6 +18,11 @@
     <div id="scan-page" class="page active">
         <!-- Full screen scanner - no header -->
         <div class="content full-screen">
+            <!-- Hamburger Menu -->
+            <button id="hamburger-menu" class="hamburger-menu">
+                <span class="material-symbols-rounded">menu</span>
+            </button>
+            
             <!-- Scanner Container -->
             <div id="scanner-container" class="scanner-container full-screen">
                 <div id="reader"></div>
@@ -37,26 +42,15 @@
                     <label for="instrument-type">Instrument Type</label>
                     <select id="instrument-type" required>
                         <option value="">Select Type</option>
-                        <option value="Piccolo">Piccolo</option>
-                        <option value="Flute">Flute</option>
-                        <option value="Oboe">Oboe</option>
-                        <option value="Bassoon">Bassoon</option>
-                        <option value="Bb Clarinet">Bb Clarinet</option>
-                        <option value="Ee Clarinet">Ee Clarinet</option>
-                        <option value="Alto Clarinet">Alto Clarinet</option>
-                        <option value="Bb Bass Clarinet">Bb Bass Clarinet</option>
-                        <option value="Alto Saxophone">Alto Saxophone</option>
-                        <option value="Tenor Saxophone">Tenor Saxophone</option>
-                        <option value="Baritone Saxophone">Baritone Saxophone</option>
                         <option value="Trumpet">Trumpet</option>
-                        <option value="French Horn">French Horn</option>
                         <option value="Trombone">Trombone</option>
-                        <option value="Euphonium">Euphonium</option>
+                        <option value="Clarinet">Clarinet</option>
+                        <option value="Flute">Flute</option>
+                        <option value="Saxophone">Saxophone</option>
+                        <option value="French Horn">French Horn</option>
                         <option value="Tuba">Tuba</option>
-                        <option value="Melophone">Melophone</option>
-                        <option value="Marching Trombone">Marching Trombone</option>
-                        <option value="Marching Baritone">Marching Baritone</option>
-                        <option value="Sousaphone">Sousaphone</option>
+                        <option value="Drum">Drum</option>
+                        <option value="Percussion">Percussion</option>
                         <option value="Other">Other</option>
                     </select>
                 </div>
@@ -92,6 +86,11 @@
 
     <!-- Inventory Page -->
     <div id="inventory-page" class="page">
+        <!-- Hamburger Menu -->
+        <button id="hamburger-menu-inventory" class="hamburger-menu">
+            <span class="material-symbols-rounded">menu</span>
+        </button>
+        
         <div class="header">
             <h1>Inventory</h1>
             <div class="stats">
@@ -133,6 +132,11 @@
 
     <!-- Search Page -->
     <div id="search-page" class="page">
+        <!-- Hamburger Menu -->
+        <button id="hamburger-menu-search" class="hamburger-menu">
+            <span class="material-symbols-rounded">menu</span>
+        </button>
+        
         <div class="header">
             <h1>Search</h1>
         </div>
@@ -153,7 +157,29 @@
             <div id="search-empty-state" class="empty-state">
                 <span class="material-symbols-rounded empty-icon">search</span>
                 <p>Search for instruments</p>
-                <p>Enter a name, serial number, or instrument type</p>
+                <p>Enter a name, serial number, instrument type, or date</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Hamburger Menu Overlay -->
+    <div id="hamburger-overlay" class="hamburger-overlay hidden">
+        <div class="hamburger-content">
+            <div class="hamburger-header">
+                <h2>Menu</h2>
+                <button id="close-hamburger" class="close-btn">
+                    <span class="material-symbols-rounded">close</span>
+                </button>
+            </div>
+            <div class="hamburger-options">
+                <button class="hamburger-option" id="manual-entry-option">
+                    <span class="material-symbols-rounded">keyboard</span>
+                    <span>Manual Barcode Entry</span>
+                </button>
+                <button class="hamburger-option" id="add-instrument-option">
+                    <span class="material-symbols-rounded">add</span>
+                    <span>Add New Instrument</span>
+                </button>
             </div>
         </div>
     </div>
@@ -163,7 +189,7 @@
         <!-- Pill shape with Scan and Inventory -->
         <div class="tab-bar-pill" data-active="scan">
             <button class="tab-btn active" data-page="scan-page">
-                <span class="material-symbols-rounded tab-icon">qr_code_scanner</span>
+                <span class="material-symbols-rounded tab-icon">barcode_scanner</span>
                 <span class="tab-label">Scan</span>
             </button>
             <button class="tab-btn" data-page="inventory-page">
