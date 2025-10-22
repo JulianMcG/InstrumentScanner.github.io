@@ -357,6 +357,7 @@ function hideMessage() {
 // ========================================
 function initInventoryPage() {
     const filterButtons = document.querySelectorAll('.filter-btn');
+    const filterContainer = document.querySelector('.filter-buttons');
     
     filterButtons.forEach(btn => {
         btn.addEventListener('click', () => {
@@ -366,6 +367,10 @@ function initInventoryPage() {
             
             // Apply filter
             const filter = btn.dataset.filter;
+            
+            // Update container data attribute for animated indicator
+            filterContainer.setAttribute('data-active', filter);
+            
             renderInventory(filter);
         });
     });
