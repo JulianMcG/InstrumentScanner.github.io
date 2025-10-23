@@ -18,6 +18,7 @@ document.addEventListener('DOMContentLoaded', () => {
     initInventoryPage();
     initSearchPage();
     initHamburgerMenus();
+    initItemOptions();
     updateStats();
     renderInventory();
     
@@ -44,11 +45,6 @@ function saveInstruments() {
 function addOrUpdateInstrument(serialNumber, instrumentType, personName, status, physicalSerialNumber = null) {
     const timestamp = new Date().toLocaleString();
     
-    // Add school identifier if not present
-    if (!serialNumber.includes('-MHSN')) {
-        serialNumber = serialNumber + '-MHSN';
-    }
-    
     // Auto-detect instrument type based on barcode number
     if (!instrumentType) {
         instrumentType = detectInstrumentType(serialNumber);
@@ -58,10 +54,10 @@ function addOrUpdateInstrument(serialNumber, instrumentType, personName, status,
     const existingIndex = instruments.findIndex(i => i.serialNumber === serialNumber);
     
     if (existingIndex !== -1) {
-        // Update existing instrument
+        // Update existing instrument - preserve existing data if new data is empty
         instruments[existingIndex] = {
             ...instruments[existingIndex],
-            personName,
+            personName: personName || instruments[existingIndex].personName,
             status,
             timestamp,
             instrumentType,
@@ -86,7 +82,46 @@ function addOrUpdateInstrument(serialNumber, instrumentType, personName, status,
 }
 
 function detectInstrumentType(serialNumber) {
-    // Remove school identifier for detection
+    // Handle uniform codes
+    if (serialNumber.startsWith('u-')) {
+        return 'Uniform';
+    }
+    
+    // Handle instrument codes with 'i-' prefix
+    if (serialNumber.startsWith('i-')) {
+        // Remove 'i-' prefix and school identifier for detection
+        const cleanNumber = serialNumber.replace('i-', '').replace('-MHSN', '');
+        const num = parseInt(cleanNumber);
+        
+        // Instrument type detection based on hundreds digit
+        const hundreds = Math.floor(num / 100);
+        
+        switch (hundreds) {
+            case 1: return 'Flute';           // i-100-i-199
+            case 2: return 'BB Clarinet';     // i-200-i-299
+            case 3: return 'Piccolo';         // i-300-i-319
+            case 4: return 'Oboe';            // i-400-i-419
+            case 5: return 'Bassoon';         // i-500-i-519
+            case 6: return 'Eb Clarinet';     // i-600-i-619
+            case 7: return 'Alto Clarinet';   // i-700-i-719
+            case 8: return 'Bb Bass Clarinet'; // i-800-i-819
+            case 9: return 'Alto Saxophone';  // i-900-i-919
+            case 10: return 'Tenor Saxophone'; // i-1000-i-1019
+            case 11: return 'Baritone Saxophone'; // i-1100-i-1119
+            case 12: return 'Trumpet';        // i-1200-i-1219
+            case 13: return 'French Horn';    // i-1300-i-1319
+            case 14: return 'Trombone';       // i-1400-i-1419
+            case 15: return 'Euphonium';      // i-1500-i-1519
+            case 16: return 'Tuba';           // i-1600-i-1619
+            case 17: return 'Melophone';      // i-1700-i-1719
+            case 18: return 'Marching Trombone'; // i-1800-i-1819
+            case 19: return 'Marching Baritone'; // i-1900-i-1919
+            case 20: return 'Sousaphone';     // i-2000-i-2019
+            default: return 'Other';
+        }
+    }
+    
+    // Handle legacy codes without prefix (for backward compatibility)
     const cleanNumber = serialNumber.replace('-MHSN', '');
     const num = parseInt(cleanNumber);
     
@@ -270,17 +305,22 @@ function onScanSuccess(decodedText) {
     const detectedType = detectInstrumentType(decodedText);
     document.getElementById('instrument-type').value = detectedType;
     
-    // Try to auto-fill person name if instrument exists
+    // Try to auto-fill person name and serial number if instrument exists
     const existingInstrument = instruments.find(i => i.serialNumber === decodedText);
     if (existingInstrument) {
-        document.getElementById('person-name').value = existingInstrument.personName;
-        // Hide serial number input for existing instruments
+        document.getElementById('person-name').value = existingInstrument.personName || '';
+        document.getElementById('serial-number-input').value = existingInstrument.physicalSerialNumber || '';
+        // Hide serial number input for existing instruments or uniforms
         document.getElementById('serial-number-group').style.display = 'none';
     } else {
         // Clear person name for new instrument
         document.getElementById('person-name').value = '';
-        // Show serial number input for new instruments
-        document.getElementById('serial-number-group').style.display = 'block';
+        // Show serial number input for new instruments (but not uniforms)
+        if (detectedType === 'Uniform') {
+            document.getElementById('serial-number-group').style.display = 'none';
+        } else {
+            document.getElementById('serial-number-group').style.display = 'block';
+        }
         document.getElementById('serial-number-input').value = '';
     }
     
@@ -331,12 +371,7 @@ function handleCheckInOut(status) {
     
     // Validate
     if (!instrumentType) {
-        showMessage('Please select an instrument type', false);
-        return;
-    }
-    
-    if (!personName) {
-        showMessage('Please enter a student name', false);
+        showMessage('Please select an item type', false);
         return;
     }
     
@@ -348,7 +383,9 @@ function handleCheckInOut(status) {
     
     // Show success message
     const statusText = status === 'checked-out' ? 'checked out' : 'checked in';
-    const successText = `${instrumentType} ${statusText} to ${personName}`;
+    const successText = personName ? 
+        `${instrumentType} ${statusText} to ${personName}` : 
+        `${instrumentType} ${statusText}`;
     showMessage(successText, true);
     
     // Hide form and resume scanning
@@ -403,21 +440,35 @@ function hideMessage() {
 // ========================================
 function initInventoryPage() {
     const filterButtons = document.querySelectorAll('.filter-btn');
-    const filterContainer = document.querySelector('.filter-buttons');
     
+    // Handle filter buttons
     filterButtons.forEach(btn => {
-        btn.addEventListener('click', () => {
-            // Update active state
-            filterButtons.forEach(b => b.classList.remove('active'));
+        btn.addEventListener('click', (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            
+            const container = btn.closest('.filter-buttons');
+            const buttons = container.querySelectorAll('.filter-btn');
+            
+            // Update active state for this container
+            buttons.forEach(b => b.classList.remove('active'));
             btn.classList.add('active');
             
-            // Apply filter
-            const filter = btn.dataset.filter;
-            
             // Update container data attribute for animated indicator
-            filterContainer.setAttribute('data-active', filter);
+            const filter = btn.dataset.filter;
+            container.setAttribute('data-active', filter);
             
-            renderInventory(filter);
+            // Get current filters from both sections
+            const filterSections = document.querySelectorAll('.filter-section');
+            const categoryContainer = filterSections[0] ? filterSections[0].querySelector('.filter-buttons') : null;
+            const statusContainer = filterSections[1] ? filterSections[1].querySelector('.filter-buttons') : null;
+            
+            const activeCategory = categoryContainer ? categoryContainer.querySelector('.filter-btn.active').dataset.filter : 'all';
+            const activeStatus = statusContainer ? statusContainer.querySelector('.filter-btn.active').dataset.filter : 'all';
+            
+            // Apply filters
+            renderInventory(activeStatus, activeCategory);
+            updateStats();
         });
     });
 }
@@ -448,24 +499,31 @@ function initSearchPage() {
     });
 }
 
-function renderInventory(filter = 'all') {
+function renderInventory(filter = 'all', category = 'all') {
     const inventoryList = document.getElementById('inventory-list');
     const emptyState = document.getElementById('empty-state');
     
-    // Filter instruments by status
+    // Filter instruments by category first
     let filteredInstruments = instruments;
+    if (category === 'instruments') {
+        filteredInstruments = instruments.filter(i => i.instrumentType !== 'Uniform');
+    } else if (category === 'uniforms') {
+        filteredInstruments = instruments.filter(i => i.instrumentType === 'Uniform');
+    }
+    
+    // Then filter by status
     if (filter === 'checked-out') {
-        filteredInstruments = instruments.filter(i => i.status === 'checked-out');
+        filteredInstruments = filteredInstruments.filter(i => i.status === 'checked-out');
     } else if (filter === 'checked-in') {
-        filteredInstruments = instruments.filter(i => i.status === 'checked-in');
+        filteredInstruments = filteredInstruments.filter(i => i.status === 'checked-in');
     }
     
     // Show/hide empty state
     if (filteredInstruments.length === 0) {
         inventoryList.innerHTML = '';
         emptyState.classList.remove('hidden');
-        document.querySelector('#empty-state p:first-of-type').textContent = 'No instruments yet';
-        document.querySelector('#empty-state p:last-of-type').textContent = 'Start by scanning an instrument';
+        document.querySelector('#empty-state p:first-of-type').textContent = 'No items yet';
+        document.querySelector('#empty-state p:last-of-type').textContent = 'Start by scanning an item';
         return;
     }
     
@@ -507,8 +565,8 @@ function renderSearchResults(searchTerm = '') {
     if (!searchTerm) {
         searchResults.innerHTML = '';
         emptyState.classList.remove('hidden');
-        document.querySelector('#search-empty-state p:first-of-type').textContent = 'Search for instruments';
-        document.querySelector('#search-empty-state p:last-of-type').textContent = 'Enter a name, serial number, or instrument type';
+        document.querySelector('#search-empty-state p:first-of-type').textContent = 'Search for items';
+        document.querySelector('#search-empty-state p:last-of-type').textContent = 'Enter a name, serial number, or item type';
         return;
     }
     
@@ -516,8 +574,9 @@ function renderSearchResults(searchTerm = '') {
     const searchLower = searchTerm.toLowerCase();
     const filteredInstruments = instruments.filter(i => {
         return i.instrumentType.toLowerCase().includes(searchLower) ||
-               i.personName.toLowerCase().includes(searchLower) ||
+               (i.personName && i.personName.toLowerCase().includes(searchLower)) ||
                i.serialNumber.toLowerCase().includes(searchLower) ||
+               (i.physicalSerialNumber && i.physicalSerialNumber.toLowerCase().includes(searchLower)) ||
                i.timestamp.toLowerCase().includes(searchLower);
     });
     
@@ -565,7 +624,7 @@ function createInstrumentCard(instrument) {
     const statusText = instrument.status === 'checked-out' ? 'Checked Out' : 'Available';
     
     return `
-        <div class="instrument-card">
+        <div class="instrument-card" data-id="${instrument.id}" onclick="showItemOptions(${instrument.id})">
             <div class="instrument-header">
                 <div>
                     <div class="instrument-title">${instrument.instrumentType}</div>
@@ -576,13 +635,13 @@ function createInstrumentCard(instrument) {
             <div class="instrument-details">
                 <div class="detail-row">
                     <span class="detail-label">Student</span>
-                    <span class="detail-value">${instrument.personName}</span>
+                    <span class="detail-value">${instrument.personName || 'Not assigned'}</span>
                 </div>
                 <div class="detail-row">
                     <span class="detail-label">Time</span>
                     <span class="detail-value">${instrument.timestamp}</span>
                 </div>
-                ${instrument.physicalSerialNumber ? `
+                ${instrument.physicalSerialNumber && instrument.instrumentType !== 'Uniform' ? `
                 <div class="detail-row">
                     <span class="detail-label">Physical Serial</span>
                     <span class="detail-value">${instrument.physicalSerialNumber}</span>
@@ -594,11 +653,223 @@ function createInstrumentCard(instrument) {
 }
 
 function updateStats() {
-    const checkedOut = instruments.filter(i => i.status === 'checked-out').length;
-    const checkedIn = instruments.filter(i => i.status === 'checked-in').length;
+    // Get current category filter
+    const categoryContainer = document.querySelector('.filter-section:first-child .filter-buttons');
+    const activeCategory = categoryContainer ? categoryContainer.querySelector('.filter-btn.active').dataset.filter : 'all';
+    
+    let itemsToCount = instruments;
+    let labelPrefix = 'Instruments';
+    
+    if (activeCategory === 'instruments') {
+        itemsToCount = instruments.filter(i => i.instrumentType !== 'Uniform');
+        labelPrefix = 'Instruments';
+    } else if (activeCategory === 'uniforms') {
+        itemsToCount = instruments.filter(i => i.instrumentType === 'Uniform');
+        labelPrefix = 'Uniforms';
+    } else {
+        // For 'all', show instruments by default
+        itemsToCount = instruments.filter(i => i.instrumentType !== 'Uniform');
+        labelPrefix = 'Instruments';
+    }
+    
+    const checkedOut = itemsToCount.filter(i => i.status === 'checked-out').length;
+    const checkedIn = itemsToCount.filter(i => i.status === 'checked-in').length;
     
     document.getElementById('checked-out-count').textContent = checkedOut;
     document.getElementById('checked-in-count').textContent = checkedIn;
+    
+    // Update labels based on category
+    document.querySelector('.stat-out .stat-label').textContent = `${labelPrefix} Checked Out`;
+    document.querySelector('.stat-in .stat-label').textContent = `${labelPrefix} Available`;
+}
+
+// ========================================
+// Item Options Functions
+// ========================================
+let currentItemId = null;
+
+function showItemOptions(itemId) {
+    currentItemId = itemId;
+    const overlay = document.getElementById('item-options-overlay');
+    overlay.classList.remove('hidden');
+}
+
+function initItemOptions() {
+    const overlay = document.getElementById('item-options-overlay');
+    const closeBtn = document.getElementById('close-item-options');
+    const editBtn = document.getElementById('edit-item-btn');
+    const removeBtn = document.getElementById('remove-item-btn');
+    
+    // Handle close
+    closeBtn.addEventListener('click', () => {
+        overlay.classList.add('hidden');
+    });
+    
+    // Handle overlay click to close
+    overlay.addEventListener('click', (e) => {
+        if (e.target === overlay) {
+            overlay.classList.add('hidden');
+        }
+    });
+    
+    // Handle edit
+    editBtn.addEventListener('click', () => {
+        editItem(currentItemId);
+        overlay.classList.add('hidden');
+    });
+    
+    // Handle remove
+    removeBtn.addEventListener('click', () => {
+        removeItem(currentItemId);
+        overlay.classList.add('hidden');
+    });
+}
+
+function editItem(itemId) {
+    const item = instruments.find(i => i.id === itemId);
+    if (!item) return;
+    
+    // Create edit form
+    const editForm = document.createElement('div');
+    editForm.className = 'edit-form-overlay';
+    editForm.innerHTML = `
+        <div class="edit-form-content">
+            <div class="edit-form-header">
+                <h2>Edit Item</h2>
+                <button class="close-edit-form">
+                    <span class="material-symbols-rounded">close</span>
+                </button>
+            </div>
+            <div class="edit-form-body">
+                <div class="form-group">
+                    <label for="edit-item-type">Item Type</label>
+                    <select id="edit-item-type">
+                        <option value="Uniform">Uniform</option>
+                        <option value="Trumpet">Trumpet</option>
+                        <option value="Trombone">Trombone</option>
+                        <option value="BB Clarinet">BB Clarinet</option>
+                        <option value="Flute">Flute</option>
+                        <option value="Piccolo">Piccolo</option>
+                        <option value="Oboe">Oboe</option>
+                        <option value="Bassoon">Bassoon</option>
+                        <option value="Eb Clarinet">Eb Clarinet</option>
+                        <option value="Alto Clarinet">Alto Clarinet</option>
+                        <option value="Bb Bass Clarinet">Bb Bass Clarinet</option>
+                        <option value="Alto Saxophone">Alto Saxophone</option>
+                        <option value="Tenor Saxophone">Tenor Saxophone</option>
+                        <option value="Baritone Saxophone">Baritone Saxophone</option>
+                        <option value="French Horn">French Horn</option>
+                        <option value="Euphonium">Euphonium</option>
+                        <option value="Tuba">Tuba</option>
+                        <option value="Melophone">Melophone</option>
+                        <option value="Marching Trombone">Marching Trombone</option>
+                        <option value="Marching Baritone">Marching Baritone</option>
+                        <option value="Sousaphone">Sousaphone</option>
+                        <option value="Other">Other</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="edit-student-name">Student Name</label>
+                    <input type="text" id="edit-student-name" placeholder="Enter student name (optional)">
+                </div>
+                <div class="form-group" id="edit-serial-group">
+                    <label for="edit-serial-number">Serial Number</label>
+                    <input type="text" id="edit-serial-number" placeholder="Enter serial number">
+                </div>
+                <div class="form-group">
+                    <label for="edit-status">Status</label>
+                    <select id="edit-status">
+                        <option value="checked-in">Available</option>
+                        <option value="checked-out">Checked Out</option>
+                    </select>
+                </div>
+            </div>
+            <div class="edit-form-actions">
+                <button class="btn btn-secondary" id="cancel-edit">Cancel</button>
+                <button class="btn btn-success" id="save-edit">Save Changes</button>
+            </div>
+        </div>
+    `;
+    
+    document.body.appendChild(editForm);
+    
+    // Populate form with current values
+    document.getElementById('edit-item-type').value = item.instrumentType;
+    document.getElementById('edit-student-name').value = item.personName || '';
+    document.getElementById('edit-serial-number').value = item.physicalSerialNumber || '';
+    document.getElementById('edit-status').value = item.status;
+    
+    // Show/hide serial number based on item type
+    const serialGroup = document.getElementById('edit-serial-group');
+    if (item.instrumentType === 'Uniform') {
+        serialGroup.style.display = 'none';
+    } else {
+        serialGroup.style.display = 'block';
+    }
+    
+    // Handle item type change
+    document.getElementById('edit-item-type').addEventListener('change', (e) => {
+        if (e.target.value === 'Uniform') {
+            serialGroup.style.display = 'none';
+        } else {
+            serialGroup.style.display = 'block';
+        }
+    });
+    
+    // Handle cancel
+    document.getElementById('cancel-edit').addEventListener('click', () => {
+        document.body.removeChild(editForm);
+    });
+    
+    document.querySelector('.close-edit-form').addEventListener('click', () => {
+        document.body.removeChild(editForm);
+    });
+    
+    // Handle save
+    document.getElementById('save-edit').addEventListener('click', () => {
+        const newType = document.getElementById('edit-item-type').value;
+        const newName = document.getElementById('edit-student-name').value;
+        const newSerial = document.getElementById('edit-serial-number').value;
+        const newStatus = document.getElementById('edit-status').value;
+        
+        // Update item
+        item.instrumentType = newType;
+        item.personName = newName.trim();
+        item.physicalSerialNumber = newType === 'Uniform' ? '' : newSerial.trim();
+        item.status = newStatus;
+        item.timestamp = new Date().toLocaleString();
+        
+        saveInstruments();
+        updateStats();
+        renderInventory();
+        showMessage('Item updated successfully', true);
+        
+        document.body.removeChild(editForm);
+    });
+    
+    // Handle overlay click to close
+    editForm.addEventListener('click', (e) => {
+        if (e.target === editForm) {
+            document.body.removeChild(editForm);
+        }
+    });
+}
+
+function removeItem(itemId) {
+    const item = instruments.find(i => i.id === itemId);
+    if (!item) return;
+    
+    const confirmMessage = `Are you sure you want to remove this ${item.instrumentType}?`;
+    if (confirm(confirmMessage)) {
+        const index = instruments.findIndex(i => i.id === itemId);
+        if (index !== -1) {
+            instruments.splice(index, 1);
+            saveInstruments();
+            updateStats();
+            renderInventory();
+            showMessage('Item removed successfully', true);
+        }
+    }
 }
 
 // ========================================
@@ -656,13 +927,22 @@ function showManualEntryForm() {
         const detectedType = detectInstrumentType(serialNumber.trim());
         document.getElementById('instrument-type').value = detectedType;
         
-        // Try to auto-fill person name if instrument exists
+        // Try to auto-fill person name and serial number if instrument exists
         const existingInstrument = instruments.find(i => i.serialNumber === serialNumber.trim());
         if (existingInstrument) {
-            document.getElementById('person-name').value = existingInstrument.personName;
+            document.getElementById('person-name').value = existingInstrument.personName || '';
+            document.getElementById('serial-number-input').value = existingInstrument.physicalSerialNumber || '';
+            document.getElementById('serial-number-group').style.display = 'none';
         } else {
             // Clear person name for new instrument
             document.getElementById('person-name').value = '';
+            // Show serial number input for new instruments (but not uniforms)
+            if (detectedType === 'Uniform') {
+                document.getElementById('serial-number-group').style.display = 'none';
+            } else {
+                document.getElementById('serial-number-group').style.display = 'block';
+            }
+            document.getElementById('serial-number-input').value = '';
         }
         
         // Focus on the first empty field
@@ -675,16 +955,14 @@ function showManualEntryForm() {
 }
 
 function showAddInstrumentForm() {
-    const instrumentType = prompt('Enter instrument type:');
+    const instrumentType = prompt('Enter item type:');
     if (instrumentType && instrumentType.trim()) {
-        const serialNumber = prompt('Enter serial number:');
+        const serialNumber = prompt('Enter barcode/serial number:');
         if (serialNumber && serialNumber.trim()) {
-            const personName = prompt('Enter student name:');
-            if (personName && personName.trim()) {
-                // Add as checked-in by default
-                addOrUpdateInstrument(serialNumber.trim(), instrumentType.trim(), personName.trim(), 'checked-in');
-                showMessage(`${instrumentType} added to inventory`, true);
-            }
+            const personName = prompt('Enter student name (optional):');
+            // Add as checked-in by default
+            addOrUpdateInstrument(serialNumber.trim(), instrumentType.trim(), personName ? personName.trim() : '', 'checked-in');
+            showMessage(`${instrumentType} added to inventory`, true);
         }
     }
 }
