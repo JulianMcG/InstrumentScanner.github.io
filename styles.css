@@ -628,13 +628,13 @@ body {
 
 .filter-btn {
     flex: 1;
-    padding: 10px 12px;
+    padding: 8px 10px;
     border: none;
     border-radius: 8px;
     background: transparent;
     color: var(--text-primary);
     font-weight: 600;
-    font-size: 13px;
+    font-size: 12px;
     cursor: pointer;
     transition: color 0.2s ease;
     font-family: -apple-system, BlinkMacSystemFont, sans-serif;
@@ -643,7 +643,7 @@ body {
     display: flex;
     align-items: center;
     justify-content: center;
-    gap: 6px;
+    gap: 4px;
     pointer-events: auto;
     user-select: none;
 }
@@ -653,7 +653,7 @@ body {
 }
 
 .filter-btn .material-symbols-rounded {
-    font-size: 16px;
+    font-size: 14px;
 }
 
 /* ========================================
