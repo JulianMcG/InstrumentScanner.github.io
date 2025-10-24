@@ -1,5 +1,5 @@
 // ========================================
-// Instrument Scanner App - iOS Native Style with Firebase
+// Instrument Scanner App - iOS Native Style
 // ========================================
 
 // State
@@ -7,320 +7,78 @@ let html5QrCode = null;
 let currentScannedCode = null;
 let instruments = [];
 let isScanning = false;
-let currentUser = null;
-let userProfile = null;
 
 // ========================================
 // Initialize App
 // ========================================
 document.addEventListener('DOMContentLoaded', () => {
-    initAuthentication();
+    loadInstruments();
     initTabNavigation();
     initScanPage();
     initInventoryPage();
     initSearchPage();
     initHamburgerMenus();
     initItemOptions();
-    initProfileSetup();
-});
-
-// ========================================
-// Authentication Management
-// ========================================
-function initAuthentication() {
-    // Listen for authentication state changes
-    window.firebase.onAuthStateChanged(window.firebase.auth, (user) => {
-        if (user) {
-            currentUser = user;
-            checkUserProfile();
-        } else {
-            currentUser = null;
-            userProfile = null;
-            showAuthPage();
-        }
-    });
-    
-    // Initialize Google sign-in button
-    const googleSignInBtn = document.getElementById('google-signin-btn');
-    if (googleSignInBtn) {
-        googleSignInBtn.addEventListener('click', signInWithGoogle);
-    }
-}
-
-async function signInWithGoogle() {
-    try {
-        const result = await window.firebase.signInWithPopup(window.firebase.auth, window.firebase.provider);
-        console.log('User signed in:', result.user);
-    } catch (error) {
-        console.error('Sign-in error:', error);
-        showMessage('Sign-in failed. Please try again.', false);
-    }
-}
-
-async function signOut() {
-    try {
-        await window.firebase.signOut(window.firebase.auth);
-        console.log('User signed out');
-    } catch (error) {
-        console.error('Sign-out error:', error);
-    }
-}
-
-async function checkUserProfile() {
-    if (!currentUser) return;
-    
-    try {
-        const userDoc = await window.firebase.getDocs(
-            window.firebase.query(
-                window.firebase.collection(window.firebase.db, 'userProfiles'),
-                window.firebase.where('userId', '==', currentUser.uid)
-            )
-        );
-        
-        if (userDoc.empty) {
-            // User needs to complete profile setup
-            showProfileSetupPage();
-        } else {
-            // User profile exists, load it
-            userProfile = userDoc.docs[0].data();
-            userProfile.id = userDoc.docs[0].id;
-            showMainApp();
-            loadInstruments();
-        }
-    } catch (error) {
-        console.error('Error checking user profile:', error);
-        showMessage('Error loading profile. Please try again.', false);
-    }
-}
-
-function showAuthPage() {
-    document.querySelectorAll('.page').forEach(page => page.classList.remove('active'));
-    document.getElementById('auth-page').classList.add('active');
-}
-
-function showProfileSetupPage() {
-    document.querySelectorAll('.page').forEach(page => page.classList.remove('active'));
-    document.getElementById('profile-setup-page').classList.add('active');
-}
-
-function showMainApp() {
-    document.querySelectorAll('.page').forEach(page => page.classList.remove('active'));
-    document.getElementById('scan-page').classList.add('active');
+    updateStats();
+    renderInventory();
     
     // Auto-start camera on load
     setTimeout(() => {
         startScanning();
     }, 100);
-}
+});
 
 // ========================================
-// Profile Setup Management
+// Data Management
 // ========================================
-function initProfileSetup() {
-    const completeProfileBtn = document.getElementById('complete-profile-btn');
-    const identifierInput = document.getElementById('user-identifier');
-    
-    if (completeProfileBtn) {
-        completeProfileBtn.addEventListener('click', completeProfileSetup);
-    }
-    
-    if (identifierInput) {
-        identifierInput.addEventListener('input', checkIdentifierAvailability);
+function loadInstruments() {
+    const stored = localStorage.getItem('instruments');
+    if (stored) {
+        instruments = JSON.parse(stored);
     }
 }
 
-async function checkIdentifierAvailability() {
-    const identifier = document.getElementById('user-identifier').value.trim();
-    const errorDiv = document.getElementById('identifier-error');
-    const successDiv = document.getElementById('identifier-success');
-    
-    if (identifier.length < 3) {
-        hideIdentifierMessages();
-        return;
-    }
-    
-    try {
-        const identifierQuery = await window.firebase.getDocs(
-            window.firebase.query(
-                window.firebase.collection(window.firebase.db, 'userProfiles'),
-                window.firebase.where('identifier', '==', identifier)
-            )
-        );
-        
-        if (identifierQuery.empty) {
-            showIdentifierMessage(successDiv, '✓ This identifier is available');
-            hideIdentifierMessage(errorDiv);
-        } else {
-            showIdentifierMessage(errorDiv, '✗ This identifier is already taken');
-            hideIdentifierMessage(successDiv);
-        }
-    } catch (error) {
-        console.error('Error checking identifier:', error);
-    }
+function saveInstruments() {
+    localStorage.setItem('instruments', JSON.stringify(instruments));
 }
 
-function showIdentifierMessage(element, message) {
-    element.textContent = message;
-    element.classList.remove('hidden');
-}
-
-function hideIdentifierMessage(element) {
-    element.classList.add('hidden');
-}
-
-function hideIdentifierMessages() {
-    hideIdentifierMessage(document.getElementById('identifier-error'));
-    hideIdentifierMessage(document.getElementById('identifier-success'));
-}
-
-async function completeProfileSetup() {
-    const identifier = document.getElementById('user-identifier').value.trim();
-    const userName = document.getElementById('user-name').value.trim();
-    const userRole = document.getElementById('user-role').value;
-    
-    if (!identifier || !userRole) {
-        showMessage('Please fill in all required fields', false);
-        return;
-    }
-    
-    // Check identifier availability one more time
-    const identifierQuery = await window.firebase.getDocs(
-        window.firebase.query(
-            window.firebase.collection(window.firebase.db, 'userProfiles'),
-            window.firebase.where('identifier', '==', identifier)
-        )
-    );
-    
-    if (!identifierQuery.empty) {
-        showMessage('This identifier is already taken. Please choose another.', false);
-        return;
-    }
-    
-    try {
-        const profileData = {
-            userId: currentUser.uid,
-            identifier: identifier,
-            name: userName || currentUser.displayName || '',
-            role: userRole,
-            email: currentUser.email,
-            createdAt: new Date().toISOString(),
-            lastLogin: new Date().toISOString()
-        };
-        
-        await window.firebase.addDoc(
-            window.firebase.collection(window.firebase.db, 'userProfiles'),
-            profileData
-        );
-        
-        userProfile = profileData;
-        showMessage('Profile setup complete!', true);
-        
-        setTimeout(() => {
-            showMainApp();
-            loadInstruments();
-        }, 1000);
-        
-    } catch (error) {
-        console.error('Error creating profile:', error);
-        showMessage('Error setting up profile. Please try again.', false);
-    }
-}
-
-// ========================================
-// Data Management (Firebase)
-// ========================================
-async function loadInstruments() {
-    if (!currentUser || !userProfile) return;
-    
-    try {
-        const instrumentsQuery = await window.firebase.getDocs(
-            window.firebase.query(
-                window.firebase.collection(window.firebase.db, 'instruments'),
-                window.firebase.where('userId', '==', currentUser.uid),
-                window.firebase.orderBy('timestamp', 'desc')
-            )
-        );
-        
-        instruments = [];
-        instrumentsQuery.forEach(doc => {
-            instruments.push({ id: doc.id, ...doc.data() });
-        });
-        
-        updateStats();
-        renderInventory();
-    } catch (error) {
-        console.error('Error loading instruments:', error);
-        showMessage('Error loading instruments. Please try again.', false);
-    }
-}
-
-async function saveInstruments() {
-    // This function is kept for compatibility but data is now saved directly to Firebase
-    // Individual instrument saves are handled in addOrUpdateInstrument
-}
-
-async function addOrUpdateInstrument(serialNumber, instrumentType, personName, status, physicalSerialNumber = null) {
-    if (!currentUser || !userProfile) {
-        showMessage('Please sign in to save instruments', false);
-        return;
-    }
-    
-    const timestamp = new Date().toISOString();
+function addOrUpdateInstrument(serialNumber, instrumentType, personName, status, physicalSerialNumber = null) {
+    const timestamp = new Date().toLocaleString();
     
     // Auto-detect instrument type based on barcode number
     if (!instrumentType) {
         instrumentType = detectInstrumentType(serialNumber);
     }
     
-    try {
-        // Check if instrument already exists
-        const existingQuery = await window.firebase.getDocs(
-            window.firebase.query(
-                window.firebase.collection(window.firebase.db, 'instruments'),
-                window.firebase.where('userId', '==', currentUser.uid),
-                window.firebase.where('serialNumber', '==', serialNumber)
-            )
-        );
-        
-        const instrumentData = {
-            userId: currentUser.uid,
-            serialNumber,
-            instrumentType,
-            personName: personName || '',
+    // Check if instrument already exists
+    const existingIndex = instruments.findIndex(i => i.serialNumber === serialNumber);
+    
+    if (existingIndex !== -1) {
+        // Update existing instrument - preserve existing data if new data is empty
+        instruments[existingIndex] = {
+            ...instruments[existingIndex],
+            personName: personName || instruments[existingIndex].personName,
             status,
             timestamp,
-            physicalSerialNumber: physicalSerialNumber || '',
-            lastUpdated: new Date().toISOString()
+            instrumentType,
+            physicalSerialNumber: physicalSerialNumber || instruments[existingIndex].physicalSerialNumber
         };
-        
-        if (!existingQuery.empty) {
-            // Update existing instrument
-            const existingDoc = existingQuery.docs[0];
-            const existingData = existingDoc.data();
-            
-            // Preserve existing data if new data is empty
-            instrumentData.personName = personName || existingData.personName || '';
-            instrumentData.physicalSerialNumber = physicalSerialNumber || existingData.physicalSerialNumber || '';
-            
-            await window.firebase.updateDoc(
-                window.firebase.doc(window.firebase.db, 'instruments', existingDoc.id),
-                instrumentData
-            );
-        } else {
-            // Add new instrument
-            await window.firebase.addDoc(
-                window.firebase.collection(window.firebase.db, 'instruments'),
-                instrumentData
-            );
-        }
-        
-        // Reload instruments from Firebase
-        await loadInstruments();
-        
-    } catch (error) {
-        console.error('Error saving instrument:', error);
-        showMessage('Error saving instrument. Please try again.', false);
+    } else {
+        // Add new instrument
+        instruments.push({
+            serialNumber,
+            instrumentType,
+            personName,
+            status,
+            timestamp,
+            physicalSerialNumber,
+            id: Date.now()
+        });
     }
+    
+    saveInstruments();
+    updateStats();
+    renderInventory();
 }
 
 function detectInstrumentType(serialNumber) {
@@ -1068,35 +826,25 @@ function editItem(itemId) {
     });
     
     // Handle save
-    document.getElementById('save-edit').addEventListener('click', async () => {
+    document.getElementById('save-edit').addEventListener('click', () => {
         const newType = document.getElementById('edit-item-type').value;
         const newName = document.getElementById('edit-student-name').value;
         const newSerial = document.getElementById('edit-serial-number').value;
         const newStatus = document.getElementById('edit-status').value;
         
-        try {
-            const updateData = {
-                instrumentType: newType,
-                personName: newName.trim(),
-                physicalSerialNumber: newType === 'Uniform' ? '' : newSerial.trim(),
-                status: newStatus,
-                lastUpdated: new Date().toISOString()
-            };
-            
-            await window.firebase.updateDoc(
-                window.firebase.doc(window.firebase.db, 'instruments', item.id),
-                updateData
-            );
-            
-            // Reload instruments from Firebase
-            await loadInstruments();
-            showMessage('Item updated successfully', true);
-            
-            document.body.removeChild(editForm);
-        } catch (error) {
-            console.error('Error updating item:', error);
-            showMessage('Error updating item. Please try again.', false);
-        }
+        // Update item
+        item.instrumentType = newType;
+        item.personName = newName.trim();
+        item.physicalSerialNumber = newType === 'Uniform' ? '' : newSerial.trim();
+        item.status = newStatus;
+        item.timestamp = new Date().toLocaleString();
+        
+        saveInstruments();
+        updateStats();
+        renderInventory();
+        showMessage('Item updated successfully', true);
+        
+        document.body.removeChild(editForm);
     });
     
     // Handle overlay click to close
@@ -1107,23 +855,19 @@ function editItem(itemId) {
     });
 }
 
-async function removeItem(itemId) {
+function removeItem(itemId) {
     const item = instruments.find(i => i.id === itemId);
     if (!item) return;
     
     const confirmMessage = `Are you sure you want to remove this ${item.instrumentType}?`;
     if (confirm(confirmMessage)) {
-        try {
-            await window.firebase.deleteDoc(
-                window.firebase.doc(window.firebase.db, 'instruments', itemId)
-            );
-            
-            // Reload instruments from Firebase
-            await loadInstruments();
+        const index = instruments.findIndex(i => i.id === itemId);
+        if (index !== -1) {
+            instruments.splice(index, 1);
+            saveInstruments();
+            updateStats();
+            renderInventory();
             showMessage('Item removed successfully', true);
-        } catch (error) {
-            console.error('Error removing item:', error);
-            showMessage('Error removing item. Please try again.', false);
         }
     }
 }
@@ -1164,15 +908,6 @@ function initHamburgerMenus() {
         hamburgerOverlay.classList.add('hidden');
         showAddInstrumentForm();
     });
-    
-    // Add logout functionality
-    const logoutOption = document.getElementById('logout-option');
-    if (logoutOption) {
-        logoutOption.addEventListener('click', () => {
-            hamburgerOverlay.classList.add('hidden');
-            signOut();
-        });
-    }
 }
 
 // ========================================
