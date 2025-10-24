@@ -15,17 +15,17 @@
     --ios-gray5: #E5E5EA;
     --ios-gray6: #F2F2F7;
     
-    --bg-primary: #FFFFFF;
-    --bg-secondary: #F2F2F7;
-    --bg-tertiary: #FFFFFF;
-    --text-primary: #000000;
-    --text-secondary: #3C3C43;
-    --text-tertiary: #3C3C4399;
-    --separator: #3C3C4329;
-    --fill-tertiary: #7676801F;
+    --bg-primary: #F8F9FA;
+    --bg-secondary: #E9ECEF;
+    --bg-tertiary: #F8F9FA;
+    --text-primary: #1A1A1A;
+    --text-secondary: #495057;
+    --text-tertiary: #6C757D;
+    --separator: #DEE2E6;
+    --fill-tertiary: #E9ECEF;
     
-    --tab-bar-bg: rgba(249, 249, 249, 0.72);
-    --card-bg: rgba(255, 255, 255, 0.92);
+    --tab-bar-bg: rgba(248, 249, 250, 0.85);
+    --card-bg: rgba(255, 255, 255, 0.95);
 }
 
 /* iOS Dark Mode Colors */
@@ -319,10 +319,10 @@ body {
 .form-group select {
     width: 100%;
     padding: 12px 16px;
-    border: none;
+    border: 1px solid var(--separator);
     border-radius: 10px;
     font-size: 17px;
-    background: var(--fill-tertiary);
+    background: var(--bg-tertiary);
     color: var(--text-primary);
     font-family: -apple-system, BlinkMacSystemFont, sans-serif;
 }
@@ -330,7 +330,8 @@ body {
 .form-group input:focus,
 .form-group select:focus {
     outline: none;
-    background: var(--bg-secondary);
+    background: var(--bg-primary);
+    border-color: var(--ios-blue);
 }
 
 .form-group input[readonly] {
@@ -530,17 +531,18 @@ body {
 .search-input {
     width: 100%;
     padding: 10px 40px 10px 40px;
-    border: none;
+    border: 1px solid var(--separator);
     border-radius: 10px;
     font-size: 17px;
-    background: var(--fill-tertiary);
+    background: var(--bg-tertiary);
     color: var(--text-primary);
     font-family: -apple-system, BlinkMacSystemFont, sans-serif;
 }
 
 .search-input:focus {
     outline: none;
-    background: var(--bg-tertiary);
+    background: var(--bg-primary);
+    border-color: var(--ios-blue);
 }
 
 .search-input::placeholder {
@@ -587,11 +589,12 @@ body {
 .filter-buttons {
     display: flex;
     gap: 0;
-    background: var(--fill-tertiary);
+    background: var(--bg-secondary);
     padding: 2px;
     border-radius: 20px;
     position: relative;
     pointer-events: auto;
+    border: 1px solid var(--separator);
 }
 
 /* Animated selection indicator for filter buttons */
@@ -602,7 +605,7 @@ body {
     left: 2px;
     width: calc(33.333% - 2px);
     height: calc(100% - 4px);
-    background: rgba(255, 255, 255, 0.2);
+    background: var(--bg-primary);
     border-radius: 18px;
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
     transition: transform 0.3s ease, background 0.3s ease;
@@ -620,12 +623,12 @@ body {
 
 .filter-buttons[data-active="checked-out"]::before {
     transform: translateX(calc(100% + 2px));
-    background: rgba(255, 149, 0, 0.2);
+    background: var(--ios-orange);
 }
 
 .filter-buttons[data-active="checked-in"]::before {
     transform: translateX(calc(200% + 4px));
-    background: rgba(52, 199, 89, 0.2);
+    background: var(--ios-green);
 }
 
 .filter-btn {
@@ -656,6 +659,67 @@ body {
 
 .filter-btn .material-symbols-rounded {
     font-size: 14px;
+}
+
+/* ========================================
+   Chip Container and Chips
+   ======================================== */
+
+.chip-container {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    pointer-events: auto;
+}
+
+.chip {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 12px;
+    border: 1px solid var(--separator);
+    border-radius: 20px;
+    background: var(--bg-tertiary);
+    color: var(--text-primary);
+    font-weight: 500;
+    font-size: 13px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    font-family: -apple-system, BlinkMacSystemFont, sans-serif;
+    pointer-events: auto;
+    user-select: none;
+    white-space: nowrap;
+}
+
+.chip:hover {
+    background: var(--bg-secondary);
+    border-color: var(--text-tertiary);
+}
+
+.chip.active {
+    background: var(--text-secondary);
+    color: white;
+    border-color: var(--text-secondary);
+}
+
+.chip[data-filter="all"].active {
+    background: var(--text-tertiary);
+    border-color: var(--text-tertiary);
+    color: white;
+}
+
+.chip[data-filter="checked-out"].active {
+    background: var(--ios-orange);
+    border-color: var(--ios-orange);
+}
+
+.chip[data-filter="checked-in"].active {
+    background: var(--ios-green);
+    border-color: var(--ios-green);
+}
+
+.chip .material-symbols-rounded {
+    font-size: 16px;
 }
 
 /* ========================================
@@ -1317,3 +1381,4 @@ body {
         width: 100%;
     }
 }
+
