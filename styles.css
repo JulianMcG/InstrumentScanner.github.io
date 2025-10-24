@@ -589,7 +589,7 @@ body {
     gap: 0;
     background: var(--fill-tertiary);
     padding: 2px;
-    border-radius: 10px;
+    border-radius: 20px;
     position: relative;
     pointer-events: auto;
 }
@@ -603,9 +603,9 @@ body {
     width: calc(33.333% - 2px);
     height: calc(100% - 4px);
     background: rgba(255, 255, 255, 0.2);
-    border-radius: 8px;
+    border-radius: 18px;
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-    transition: transform 0.3s ease;
+    transition: transform 0.3s ease, background 0.3s ease;
     z-index: 0;
 }
 
@@ -620,17 +620,19 @@ body {
 
 .filter-buttons[data-active="checked-out"]::before {
     transform: translateX(calc(100% + 2px));
+    background: rgba(255, 149, 0, 0.2);
 }
 
 .filter-buttons[data-active="checked-in"]::before {
     transform: translateX(calc(200% + 4px));
+    background: rgba(52, 199, 89, 0.2);
 }
 
 .filter-btn {
     flex: 1;
     padding: 8px 10px;
     border: none;
-    border-radius: 8px;
+    border-radius: 18px;
     background: transparent;
     color: var(--text-primary);
     font-weight: 600;
