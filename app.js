@@ -440,8 +440,9 @@ function hideMessage() {
 // ========================================
 function initInventoryPage() {
     const filterButtons = document.querySelectorAll('.filter-btn');
+    const chips = document.querySelectorAll('.chip');
     
-    // Handle filter buttons
+    // Handle filter buttons (for category filter)
     filterButtons.forEach(btn => {
         btn.addEventListener('click', (e) => {
             e.preventDefault();
@@ -461,10 +462,37 @@ function initInventoryPage() {
             // Get current filters from both sections
             const filterSections = document.querySelectorAll('.filter-section');
             const categoryContainer = filterSections[0] ? filterSections[0].querySelector('.filter-buttons') : null;
-            const statusContainer = filterSections[1] ? filterSections[1].querySelector('.filter-buttons') : null;
+            const statusContainer = filterSections[1] ? filterSections[1].querySelector('.chip-container') : null;
             
             const activeCategory = categoryContainer ? categoryContainer.querySelector('.filter-btn.active').dataset.filter : 'all';
-            const activeStatus = statusContainer ? statusContainer.querySelector('.filter-btn.active').dataset.filter : 'all';
+            const activeStatus = statusContainer ? statusContainer.querySelector('.chip.active').dataset.filter : 'all';
+            
+            // Apply filters
+            renderInventory(activeStatus, activeCategory);
+            updateStats();
+        });
+    });
+    
+    // Handle chips (for status filter)
+    chips.forEach(chip => {
+        chip.addEventListener('click', (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            
+            const container = chip.closest('.chip-container');
+            const chipButtons = container.querySelectorAll('.chip');
+            
+            // Update active state for this container
+            chipButtons.forEach(c => c.classList.remove('active'));
+            chip.classList.add('active');
+            
+            // Get current filters from both sections
+            const filterSections = document.querySelectorAll('.filter-section');
+            const categoryContainer = filterSections[0] ? filterSections[0].querySelector('.filter-buttons') : null;
+            const statusContainer = filterSections[1] ? filterSections[1].querySelector('.chip-container') : null;
+            
+            const activeCategory = categoryContainer ? categoryContainer.querySelector('.filter-btn.active').dataset.filter : 'all';
+            const activeStatus = statusContainer ? statusContainer.querySelector('.chip.active').dataset.filter : 'all';
             
             // Apply filters
             renderInventory(activeStatus, activeCategory);
@@ -977,3 +1005,4 @@ if ('serviceWorker' in navigator) {
             .catch(err => console.log('Service Worker registration failed'));
     });
 }
+
