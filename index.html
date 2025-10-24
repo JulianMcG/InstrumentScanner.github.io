@@ -14,8 +14,66 @@
     <link rel="stylesheet" href="styles.css">
 </head>
 <body>
+    <!-- Authentication Page -->
+    <div id="auth-page" class="page active">
+        <div class="auth-container">
+            <div class="auth-header">
+                <h1>Instrument Scanner</h1>
+                <p>Sign in to manage your instrument inventory</p>
+            </div>
+            
+            <div class="auth-content">
+                <button id="google-signin-btn" class="btn btn-primary auth-btn">
+                    <span class="material-symbols-rounded">login</span>
+                    Sign in with Google
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- User Profile Setup Page -->
+    <div id="profile-setup-page" class="page">
+        <div class="profile-setup-container">
+            <div class="profile-setup-header">
+                <h1>Complete Your Profile</h1>
+                <p>Set up your account to get started</p>
+            </div>
+            
+            <div class="profile-setup-content">
+                <div class="form-group">
+                    <label for="user-identifier">School/Organization Identifier</label>
+                    <input type="text" id="user-identifier" placeholder="e.g., MHSN, ABC High School" required>
+                    <div id="identifier-error" class="error-message hidden"></div>
+                    <div id="identifier-success" class="success-message hidden"></div>
+                </div>
+                
+                <div class="form-group">
+                    <label for="user-name">Your Name (Optional)</label>
+                    <input type="text" id="user-name" placeholder="Enter your name">
+                </div>
+                
+                <div class="form-group">
+                    <label for="user-role">Your Role</label>
+                    <select id="user-role" required>
+                        <option value="">Select Role</option>
+                        <option value="band-director">Band Director</option>
+                        <option value="music-teacher">Music Teacher</option>
+                        <option value="inventory-manager">Inventory Manager</option>
+                        <option value="administrator">Administrator</option>
+                        <option value="other">Other</option>
+                    </select>
+                </div>
+                
+                <button id="complete-profile-btn" class="btn btn-success">
+                    <span class="material-symbols-rounded">check_circle</span>
+                    Complete Setup
+                </button>
+            </div>
+        </div>
+    </div>
+
     <!-- Scan Page -->
-    <div id="scan-page" class="page active">
+    <div id="scan-page" class="page">
         <!-- Full screen scanner - no header -->
         <div class="content full-screen">
             <!-- Hamburger Menu -->
@@ -252,6 +310,10 @@
                     <span class="material-symbols-rounded">add</span>
                     <span>Add New Item</span>
                 </button>
+                <button class="hamburger-option" id="logout-option">
+                    <span class="material-symbols-rounded">logout</span>
+                    <span>Sign Out</span>
+                </button>
             </div>
         </div>
     </div>
@@ -278,6 +340,35 @@
 
     <!-- Include html5-qrcode library for barcode scanning -->
     <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
+    
+    <!-- Firebase SDK -->
+    <script type="module">
+        // Import the functions you need from the SDKs you need
+        import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js';
+        import { getAuth, GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js';
+        import { getFirestore, collection, addDoc, getDocs, doc, updateDoc, deleteDoc, query, where, orderBy, onSnapshot } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
+        
+        // Your web app's Firebase configuration
+        const firebaseConfig = {
+            apiKey: "AIzaSyAWrU2cWe189vCSvQIEhsWb_KCM_66fVmY",
+            authDomain: "instrument-scanner-5dc88.firebaseapp.com",
+            projectId: "instrument-scanner-5dc88",
+            storageBucket: "instrument-scanner-5dc88.firebasestorage.app",
+            messagingSenderId: "1082304496663",
+            appId: "1:1082304496663:web:69831c24ad39b355b2c852",
+            measurementId: "G-10FZ4V6BKF"
+        };
+        
+        // Initialize Firebase
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+        const provider = new GoogleAuthProvider();
+        
+        // Make Firebase available globally
+        window.firebase = { auth, db, provider, signInWithPopup, signOut, onAuthStateChanged, collection, addDoc, getDocs, doc, updateDoc, deleteDoc, query, where, orderBy, onSnapshot };
+    </script>
+    
     <script src="app.js"></script>
 </body>
 </html>
