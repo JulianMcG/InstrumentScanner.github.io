@@ -29,6 +29,60 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 // ========================================
+// Barcode Validation
+// ========================================
+// Allowed instrument code ranges, using the prefixed system from barcode-list.txt
+const ALLOWED_INSTRUMENT_RANGES = [
+    [100, 119],   // Flute
+    [200, 219],   // BB Clarinet
+    [300, 319],   // Piccolo
+    [400, 419],   // Oboe
+    [500, 519],   // Bassoon
+    [600, 619],   // Eb Clarinet
+    [700, 719],   // Alto Clarinet
+    [800, 819],   // Bb Bass Clarinet
+    [900, 919],   // Alto Saxophone
+    [1000, 1019], // Tenor Saxophone
+    [1100, 1119], // Baritone Saxophone
+    [1200, 1219], // Trumpet
+    [1300, 1319], // French Horn
+    [1400, 1419], // Trombone
+    [1500, 1519], // Euphonium
+    [1600, 1619], // Tuba
+    [1700, 1719], // Melophone
+    [1800, 1819], // Marching Trombone
+    [1900, 1919], // Marching Baritone
+    [2000, 2019], // Sousaphone
+];
+
+function normalizeBarcodeForValidation(code) {
+    if (!code) return '';
+    const trimmed = String(code).trim();
+    const lower = trimmed.toLowerCase();
+    // Allow optional "-mhsn" suffix during validation only
+    return lower.replace(/-mhsn$/, '');
+}
+
+function isValidBarcode(code) {
+    const normalized = normalizeBarcodeForValidation(code);
+    // Uniforms: u-<1..100>
+    if (/^u-\d+$/.test(normalized)) {
+        const n = parseInt(normalized.slice(2), 10);
+        return n >= 1 && n <= 100;
+    }
+    // Instruments: i-<ranges above>
+    if (/^i-\d+$/.test(normalized)) {
+        const n = parseInt(normalized.slice(2), 10);
+        for (const [start, end] of ALLOWED_INSTRUMENT_RANGES) {
+            if (n >= start && n <= end) return true;
+        }
+        return false;
+    }
+    // Otherwise invalid/noisy
+    return false;
+}
+
+// ========================================
 // Data Management
 // ========================================
 function loadInstruments() {
@@ -280,31 +334,37 @@ function startScanning() {
 }
 
 function onScanSuccess(decodedText) {
+    // Ignore invalid/noisy scans; keep scanning until valid
+    if (!isValidBarcode(decodedText)) {
+        console.log('Ignoring invalid barcode:', decodedText);
+        return;
+    }
+
     console.log("Barcode scanned successfully:", decodedText);
-    
+
     // Vibrate on successful scan (if supported)
     if (navigator.vibrate) {
         navigator.vibrate(100);
     }
-    
+
     // Stop scanning temporarily
     pauseScanning();
-    
+
     // Store the scanned code
     currentScannedCode = decodedText;
-    
+
     // Hide scan guide
     const scanGuide = document.querySelector('.scan-guide');
     if (scanGuide) scanGuide.style.display = 'none';
-    
+
     // Show the form
     document.getElementById('serial-number').value = decodedText;
     document.getElementById('scan-form').classList.remove('hidden');
-    
+
     // Auto-detect instrument type based on barcode
     const detectedType = detectInstrumentType(decodedText);
     document.getElementById('instrument-type').value = detectedType;
-    
+
     // Try to auto-fill person name and serial number if instrument exists
     const existingInstrument = instruments.find(i => i.serialNumber === decodedText);
     if (existingInstrument) {
@@ -323,7 +383,7 @@ function onScanSuccess(decodedText) {
         }
         document.getElementById('serial-number-input').value = '';
     }
-    
+
     // Focus on the first empty field
     if (!existingInstrument) {
         document.getElementById('instrument-type').focus();
@@ -944,6 +1004,10 @@ function initHamburgerMenus() {
 function showManualEntryForm() {
     const serialNumber = prompt('Enter barcode manually:');
     if (serialNumber && serialNumber.trim()) {
+        if (!isValidBarcode(serialNumber.trim())) {
+            showMessage('Invalid barcode. Please enter a valid code.', false);
+            return;
+        }
         // Simulate a successful scan
         currentScannedCode = serialNumber.trim();
         
