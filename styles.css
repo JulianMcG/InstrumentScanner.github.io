@@ -249,7 +249,7 @@ body {
 }
 
 .scan-guide-text {
-    color: var(--text-primary);
+    color: #ffffff;
     font-size: 13px;
     font-weight: 500;
     opacity: 0.8;
