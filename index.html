@@ -43,21 +43,25 @@
                     <select id="instrument-type" required>
                         <option value="">Select Type</option>
                         <option value="Uniform">Uniform</option>
-                        <option value="Trumpet">Trumpet</option>
-                        <option value="Trombone">Trombone</option>
-                        <option value="BB Clarinet">BB Clarinet</option>
+                        <option value="Jacket">Jacket</option>
+                        <option value="Pants">Pants</option>
+                        <option value="Hat">Hat</option>
+                        <option value="Rain Jacket">Rain Jacket</option>
                         <option value="Flute">Flute</option>
                         <option value="Piccolo">Piccolo</option>
                         <option value="Oboe">Oboe</option>
                         <option value="Bassoon">Bassoon</option>
+                        <option value="Bb Clarinet">Bb Clarinet</option>
                         <option value="Eb Clarinet">Eb Clarinet</option>
                         <option value="Alto Clarinet">Alto Clarinet</option>
                         <option value="Bb Bass Clarinet">Bb Bass Clarinet</option>
                         <option value="Alto Saxophone">Alto Saxophone</option>
                         <option value="Tenor Saxophone">Tenor Saxophone</option>
                         <option value="Baritone Saxophone">Baritone Saxophone</option>
+                        <option value="Trumpet">Trumpet</option>
                         <option value="French Horn">French Horn</option>
                         <option value="Euphonium">Euphonium</option>
+                        <option value="Trombone">Trombone</option>
                         <option value="Tuba">Tuba</option>
                         <option value="Melophone">Melophone</option>
                         <option value="Marching Trombone">Marching Trombone</option>
@@ -252,6 +256,10 @@
                     <span class="material-symbols-rounded">add</span>
                     <span>Add New Item</span>
                 </button>
+                <button class="hamburger-option" id="print-barcodes-option">
+                    <span class="material-symbols-rounded">print</span>
+                    <span>Print Barcodes</span>
+                </button>
             </div>
         </div>
     </div>
@@ -278,6 +286,10 @@
 
     <!-- Include html5-qrcode library for barcode scanning -->
     <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
+    <!-- Include JsBarcode for barcode generation -->
+    <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.5/dist/JsBarcode.all.min.js"></script>
+    <!-- Include jsPDF for PDF generation -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="app.js"></script>
 </body>
 </html>
