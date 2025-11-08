@@ -8,6 +8,10 @@ let currentScannedCode = null;
 let instruments = [];
 let isScanning = false;
 
+const UNIFORM_TYPES = ['Jacket', 'Pants', 'Hat', 'Rain Jacket'];
+window.UNIFORM_TYPES = UNIFORM_TYPES;
+const isUniformType = (type) => type === 'Uniform' || UNIFORM_TYPES.includes(type);
+
 // ========================================
 // Initialize App
 // ========================================
@@ -27,60 +31,6 @@ document.addEventListener('DOMContentLoaded', () => {
         startScanning();
     }, 100);
 });
-
-// ========================================
-// Barcode Validation
-// ========================================
-// Allowed instrument code ranges, using the prefixed system from barcode-list.txt
-const ALLOWED_INSTRUMENT_RANGES = [
-    [100, 119],   // Flute
-    [200, 219],   // BB Clarinet
-    [300, 319],   // Piccolo
-    [400, 419],   // Oboe
-    [500, 519],   // Bassoon
-    [600, 619],   // Eb Clarinet
-    [700, 719],   // Alto Clarinet
-    [800, 819],   // Bb Bass Clarinet
-    [900, 919],   // Alto Saxophone
-    [1000, 1019], // Tenor Saxophone
-    [1100, 1119], // Baritone Saxophone
-    [1200, 1219], // Trumpet
-    [1300, 1319], // French Horn
-    [1400, 1419], // Trombone
-    [1500, 1519], // Euphonium
-    [1600, 1619], // Tuba
-    [1700, 1719], // Melophone
-    [1800, 1819], // Marching Trombone
-    [1900, 1919], // Marching Baritone
-    [2000, 2019], // Sousaphone
-];
-
-function normalizeBarcodeForValidation(code) {
-    if (!code) return '';
-    const trimmed = String(code).trim();
-    const lower = trimmed.toLowerCase();
-    // Allow optional "-mhsn" suffix during validation only
-    return lower.replace(/-mhsn$/, '');
-}
-
-function isValidBarcode(code) {
-    const normalized = normalizeBarcodeForValidation(code);
-    // Uniforms: u-<1..100>
-    if (/^u-\d+$/.test(normalized)) {
-        const n = parseInt(normalized.slice(2), 10);
-        return n >= 1 && n <= 100;
-    }
-    // Instruments: i-<ranges above>
-    if (/^i-\d+$/.test(normalized)) {
-        const n = parseInt(normalized.slice(2), 10);
-        for (const [start, end] of ALLOWED_INSTRUMENT_RANGES) {
-            if (n >= start && n <= end) return true;
-        }
-        return false;
-    }
-    // Otherwise invalid/noisy
-    return false;
-}
 
 // ========================================
 // Data Management
@@ -138,6 +88,20 @@ function addOrUpdateInstrument(serialNumber, instrumentType, personName, status,
 function detectInstrumentType(serialNumber) {
     // Handle uniform codes
     if (serialNumber.startsWith('u-')) {
+        const cleanNumber = serialNumber.replace('u-', '').replace('-MHSN', '');
+        const num = parseInt(cleanNumber);
+        
+        if (!Number.isNaN(num)) {
+            const hundreds = Math.floor(num / 100);
+            switch (hundreds) {
+                case 1: return 'Jacket';
+                case 2: return 'Pants';
+                case 3: return 'Hat';
+                case 4: return 'Rain Jacket';
+                default: return 'Uniform';
+            }
+        }
+        
         return 'Uniform';
     }
     
@@ -152,7 +116,7 @@ function detectInstrumentType(serialNumber) {
         
         switch (hundreds) {
             case 1: return 'Flute';           // i-100-i-199
-            case 2: return 'BB Clarinet';     // i-200-i-299
+            case 2: return 'Bb Clarinet';     // i-200-i-299
             case 3: return 'Piccolo';         // i-300-i-319
             case 4: return 'Oboe';            // i-400-i-419
             case 5: return 'Bassoon';         // i-500-i-519
@@ -334,37 +298,31 @@ function startScanning() {
 }
 
 function onScanSuccess(decodedText) {
-    // Ignore invalid/noisy scans; keep scanning until valid
-    if (!isValidBarcode(decodedText)) {
-        console.log('Ignoring invalid barcode:', decodedText);
-        return;
-    }
-
     console.log("Barcode scanned successfully:", decodedText);
-
+    
     // Vibrate on successful scan (if supported)
     if (navigator.vibrate) {
         navigator.vibrate(100);
     }
-
+    
     // Stop scanning temporarily
     pauseScanning();
-
+    
     // Store the scanned code
     currentScannedCode = decodedText;
-
+    
     // Hide scan guide
     const scanGuide = document.querySelector('.scan-guide');
     if (scanGuide) scanGuide.style.display = 'none';
-
+    
     // Show the form
     document.getElementById('serial-number').value = decodedText;
     document.getElementById('scan-form').classList.remove('hidden');
-
+    
     // Auto-detect instrument type based on barcode
     const detectedType = detectInstrumentType(decodedText);
     document.getElementById('instrument-type').value = detectedType;
-
+    
     // Try to auto-fill person name and serial number if instrument exists
     const existingInstrument = instruments.find(i => i.serialNumber === decodedText);
     if (existingInstrument) {
@@ -376,14 +334,14 @@ function onScanSuccess(decodedText) {
         // Clear person name for new instrument
         document.getElementById('person-name').value = '';
         // Show serial number input for new instruments (but not uniforms)
-        if (detectedType === 'Uniform') {
+        if (isUniformType(detectedType)) {
             document.getElementById('serial-number-group').style.display = 'none';
         } else {
             document.getElementById('serial-number-group').style.display = 'block';
         }
         document.getElementById('serial-number-input').value = '';
     }
-
+    
     // Focus on the first empty field
     if (!existingInstrument) {
         document.getElementById('instrument-type').focus();
@@ -594,9 +552,9 @@ function renderInventory(filter = 'all', category = 'all') {
     // Filter instruments by category first
     let filteredInstruments = instruments;
     if (category === 'instruments') {
-        filteredInstruments = instruments.filter(i => i.instrumentType !== 'Uniform');
+        filteredInstruments = instruments.filter(i => !isUniformType(i.instrumentType));
     } else if (category === 'uniforms') {
-        filteredInstruments = instruments.filter(i => i.instrumentType === 'Uniform');
+        filteredInstruments = instruments.filter(i => isUniformType(i.instrumentType));
     }
     
     // Then filter by status
@@ -729,7 +687,7 @@ function createInstrumentCard(instrument) {
                     <span class="detail-label">Time</span>
                     <span class="detail-value">${instrument.timestamp}</span>
                 </div>
-                ${instrument.physicalSerialNumber && instrument.instrumentType !== 'Uniform' ? `
+                ${instrument.physicalSerialNumber && !isUniformType(instrument.instrumentType) ? `
                 <div class="detail-row">
                     <span class="detail-label">Physical Serial</span>
                     <span class="detail-value">${instrument.physicalSerialNumber}</span>
@@ -749,14 +707,14 @@ function updateStats() {
     let labelPrefix = 'Instruments';
     
     if (activeCategory === 'instruments') {
-        itemsToCount = instruments.filter(i => i.instrumentType !== 'Uniform');
+        itemsToCount = instruments.filter(i => !isUniformType(i.instrumentType));
         labelPrefix = 'Instruments';
     } else if (activeCategory === 'uniforms') {
-        itemsToCount = instruments.filter(i => i.instrumentType === 'Uniform');
+        itemsToCount = instruments.filter(i => isUniformType(i.instrumentType));
         labelPrefix = 'Uniforms';
     } else {
         // For 'all', show instruments by default
-        itemsToCount = instruments.filter(i => i.instrumentType !== 'Uniform');
+        itemsToCount = instruments.filter(i => !isUniformType(i.instrumentType));
         labelPrefix = 'Instruments';
     }
     
@@ -833,21 +791,25 @@ function editItem(itemId) {
                     <label for="edit-item-type">Item Type</label>
                     <select id="edit-item-type">
                         <option value="Uniform">Uniform</option>
-                        <option value="Trumpet">Trumpet</option>
-                        <option value="Trombone">Trombone</option>
-                        <option value="BB Clarinet">BB Clarinet</option>
+                        <option value="Jacket">Jacket</option>
+                        <option value="Pants">Pants</option>
+                        <option value="Hat">Hat</option>
+                        <option value="Rain Jacket">Rain Jacket</option>
                         <option value="Flute">Flute</option>
                         <option value="Piccolo">Piccolo</option>
                         <option value="Oboe">Oboe</option>
                         <option value="Bassoon">Bassoon</option>
+                        <option value="Bb Clarinet">Bb Clarinet</option>
                         <option value="Eb Clarinet">Eb Clarinet</option>
                         <option value="Alto Clarinet">Alto Clarinet</option>
                         <option value="Bb Bass Clarinet">Bb Bass Clarinet</option>
                         <option value="Alto Saxophone">Alto Saxophone</option>
                         <option value="Tenor Saxophone">Tenor Saxophone</option>
                         <option value="Baritone Saxophone">Baritone Saxophone</option>
+                        <option value="Trumpet">Trumpet</option>
                         <option value="French Horn">French Horn</option>
                         <option value="Euphonium">Euphonium</option>
+                        <option value="Trombone">Trombone</option>
                         <option value="Tuba">Tuba</option>
                         <option value="Melophone">Melophone</option>
                         <option value="Marching Trombone">Marching Trombone</option>
@@ -889,7 +851,7 @@ function editItem(itemId) {
     
     // Show/hide serial number based on item type
     const serialGroup = document.getElementById('edit-serial-group');
-    if (item.instrumentType === 'Uniform') {
+    if (isUniformType(item.instrumentType)) {
         serialGroup.style.display = 'none';
     } else {
         serialGroup.style.display = 'block';
@@ -897,7 +859,7 @@ function editItem(itemId) {
     
     // Handle item type change
     document.getElementById('edit-item-type').addEventListener('change', (e) => {
-        if (e.target.value === 'Uniform') {
+        if (isUniformType(e.target.value)) {
             serialGroup.style.display = 'none';
         } else {
             serialGroup.style.display = 'block';
@@ -923,7 +885,7 @@ function editItem(itemId) {
         // Update item
         item.instrumentType = newType;
         item.personName = newName.trim();
-        item.physicalSerialNumber = newType === 'Uniform' ? '' : newSerial.trim();
+        item.physicalSerialNumber = isUniformType(newType) ? '' : newSerial.trim();
         item.status = newStatus;
         item.timestamp = new Date().toLocaleString();
         
@@ -969,6 +931,7 @@ function initHamburgerMenus() {
     const closeHamburger = document.getElementById('close-hamburger');
     const manualEntryOption = document.getElementById('manual-entry-option');
     const addInstrumentOption = document.getElementById('add-instrument-option');
+    const printBarcodesOption = document.getElementById('print-barcodes-option');
     
     // Add click listeners to all hamburger menus
     hamburgerMenus.forEach(menu => {
@@ -996,6 +959,11 @@ function initHamburgerMenus() {
         hamburgerOverlay.classList.add('hidden');
         showAddInstrumentForm();
     });
+    
+    printBarcodesOption.addEventListener('click', () => {
+        hamburgerOverlay.classList.add('hidden');
+        printBarcodes();
+    });
 }
 
 // ========================================
@@ -1004,10 +972,6 @@ function initHamburgerMenus() {
 function showManualEntryForm() {
     const serialNumber = prompt('Enter barcode manually:');
     if (serialNumber && serialNumber.trim()) {
-        if (!isValidBarcode(serialNumber.trim())) {
-            showMessage('Invalid barcode. Please enter a valid code.', false);
-            return;
-        }
         // Simulate a successful scan
         currentScannedCode = serialNumber.trim();
         
@@ -1029,7 +993,7 @@ function showManualEntryForm() {
             // Clear person name for new instrument
             document.getElementById('person-name').value = '';
             // Show serial number input for new instruments (but not uniforms)
-            if (detectedType === 'Uniform') {
+            if (isUniformType(detectedType)) {
                 document.getElementById('serial-number-group').style.display = 'none';
             } else {
                 document.getElementById('serial-number-group').style.display = 'block';
@@ -1057,6 +1021,179 @@ function showAddInstrumentForm() {
             showMessage(`${instrumentType} added to inventory`, true);
         }
     }
+}
+
+// ========================================
+// Print Barcodes Functions
+// ========================================
+function printBarcodes() {
+    // Get all barcodes from the barcode list
+    const barcodes = getAllBarcodes();
+    
+    if (barcodes.length === 0) {
+        showMessage('No barcodes found to print', false);
+        return;
+    }
+    
+    // Show loading message
+    showMessage('Generating barcode PDF...', true);
+    
+    // Generate PDF with barcodes
+    generateBarcodePDF(barcodes);
+}
+
+function getAllBarcodes() {
+    // Extract all barcodes from the barcode-list.txt content
+    // This includes all instrument barcodes only
+    const barcodes = [];
+    
+    // Instrument barcodes according to the actual ranges in barcode-list.txt
+    const instrumentRanges = [
+        { start: 100, end: 119, name: 'Flute' },
+        { start: 300, end: 319, name: 'Piccolo' },
+        { start: 400, end: 419, name: 'Oboe' },
+        { start: 500, end: 519, name: 'Bassoon' },
+        { start: 200, end: 219, name: 'Bb Clarinet' },
+        { start: 600, end: 619, name: 'Eb Clarinet' },
+        { start: 700, end: 719, name: 'Alto Clarinet' },
+        { start: 800, end: 819, name: 'Bb Bass Clarinet' },
+        { start: 900, end: 919, name: 'Alto Saxophone' },
+        { start: 1000, end: 1019, name: 'Tenor Saxophone' },
+        { start: 1100, end: 1119, name: 'Baritone Saxophone' },
+        { start: 1200, end: 1219, name: 'Trumpet' },
+        { start: 1300, end: 1319, name: 'French Horn' },
+        { start: 1500, end: 1519, name: 'Euphonium' },
+        { start: 1400, end: 1419, name: 'Trombone' },
+        { start: 1600, end: 1619, name: 'Tuba' },
+        { start: 1700, end: 1719, name: 'Melophone' },
+        { start: 1800, end: 1819, name: 'Marching Trombone' },
+        { start: 1900, end: 1919, name: 'Marching Baritone' },
+        { start: 2000, end: 2019, name: 'Sousaphone' }
+    ];
+    
+    // Generate barcodes for each instrument range
+    instrumentRanges.forEach(range => {
+        for (let i = range.start; i <= range.end; i++) {
+            barcodes.push(`i-${i}-MHSN`);
+        }
+    });
+    
+    // Uniform barcodes share the same numbering system but use the 'u-' prefix
+    const uniformRanges = [
+        { start: 100, end: 199, name: 'Jacket' },
+        { start: 200, end: 299, name: 'Pants' },
+        { start: 300, end: 399, name: 'Hat' },
+        { start: 400, end: 499, name: 'Rain Jacket' }
+    ];
+    
+    uniformRanges.forEach(range => {
+        for (let i = range.start; i <= range.end; i++) {
+            barcodes.push(`u-${i}-MHSN`);
+        }
+    });
+    
+    return barcodes;
+}
+
+function generateBarcodePDF(barcodes) {
+    const { jsPDF } = window.jspdf;
+    
+    // Page dimensions - 10 inches wide = 254mm, variable height
+    const pageWidth = 254; // 10 inches
+    const margin = 10;
+    const contentWidth = pageWidth - (margin * 2);
+    
+    // Fixed layout: 5 barcodes per row
+    const barcodesPerRow = 5;
+    const barcodeWidth = (contentWidth - (barcodesPerRow - 1) * 6) / barcodesPerRow; // 6mm spacing between (wider barcodes)
+    const barcodeHeight = 18; // Shorter height
+    const textHeight = 8; // Reduced text height
+    const padding = 4; // Padding inside border
+    const verticalSpacing = 3; // Tighter vertical spacing
+    const totalHeight = barcodeHeight + textHeight + (padding * 2) + verticalSpacing;
+    const totalWidth = barcodeWidth + 6; // 6mm horizontal spacing
+    
+    // Calculate how many rows we need
+    const totalRows = Math.ceil(barcodes.length / barcodesPerRow);
+    const pageHeight = 20 + (totalRows * totalHeight) + margin; // Reduced header space + content + margin
+    
+    // Create PDF with custom dimensions
+    const doc = new jsPDF('p', 'mm', [pageWidth, pageHeight]);
+    
+    // Create a temporary canvas for barcode generation
+    const canvas = document.createElement('canvas');
+    const ctx = canvas.getContext('2d');
+    
+    let barcodeIndex = 0;
+    
+    // Draw barcodes in grid
+    for (let row = 0; row < totalRows && barcodeIndex < barcodes.length; row++) {
+        for (let col = 0; col < barcodesPerRow && barcodeIndex < barcodes.length; col++) {
+            const x = margin + (col * totalWidth);
+            const y = 15 + (row * totalHeight);
+            
+            const barcode = barcodes[barcodeIndex];
+            
+            // Generate barcode
+            try {
+                // Set canvas size with higher resolution
+                canvas.width = barcodeWidth * 4;
+                canvas.height = barcodeHeight * 4;
+                
+                // Clear canvas with white background
+                ctx.fillStyle = 'white';
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+                
+                // Generate barcode using JsBarcode
+                JsBarcode(canvas, barcode, {
+                    format: "CODE128",
+                    width: 2,
+                    height: barcodeHeight * 4,
+                    displayValue: false,
+                    margin: 0,
+                    background: 'white',
+                    lineColor: 'black'
+                });
+                
+                // Add barcode image to PDF
+                const imgData = canvas.toDataURL('image/png');
+                doc.addImage(imgData, 'PNG', x + padding, y + padding, barcodeWidth - (padding * 2), barcodeHeight);
+                
+                // Add border around barcode only (not text)
+                doc.setDrawColor(0, 0, 0);
+                doc.setLineWidth(0.5);
+                doc.rect(x, y, barcodeWidth, barcodeHeight + (padding * 2));
+                
+                // Add barcode text within the border (between barcode and bottom of border)
+                doc.setFontSize(8);
+                doc.setFont('courier', 'normal'); // Monospace font
+                doc.text(barcode, x + barcodeWidth/2, y + barcodeHeight + padding + 2, { align: 'center' });
+                
+            } catch (error) {
+                console.error('Error generating barcode for', barcode, error);
+                // Add border around barcode area only
+                doc.setDrawColor(0, 0, 0);
+                doc.setLineWidth(0.5);
+                doc.rect(x, y, barcodeWidth, barcodeHeight + (padding * 2));
+                
+                // Add text fallback within the border
+                doc.setFontSize(8);
+                doc.setFont('courier', 'normal'); // Monospace font
+                doc.text(barcode, x + barcodeWidth/2, y + barcodeHeight + padding + 2, { align: 'center' });
+            }
+            
+            barcodeIndex++;
+        }
+    }
+    
+    // Save the PDF
+    doc.save(`instrument-barcodes-${new Date().toISOString().split('T')[0]}.pdf`);
+    
+    // Hide loading message
+    setTimeout(() => {
+        hideMessage();
+        showMessage(`Generated PDF with ${barcodes.length} barcodes`, true);
+    }, 1000);
 }
 
 // ========================================
